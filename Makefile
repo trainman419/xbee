@@ -19,6 +19,6 @@ sign: sign.o xbee_api.o
 sign.o: xbee_api.h
 
 clean:
-	-rm -rf sign xbsh
+	-rm -rf sign xbsh xbsh2 *.o
 .PHONY: clean
 
