@@ -47,11 +47,11 @@ int main(int argc, char ** argv) {
       free(data);
       data = readline("xbsh> ");
       /* AT command */
-      if( strncmp( data, "AT", 2) == 0 ) {
+      if( data && strncmp( data, "AT", 2) == 0 ) {
          p = at(data + 2);
          write(ser, p.data, p.sz);
       }
-      if( data[0] == 'r' ) {
+      if( data && data[0] == 'r' ) {
          char * output = data + 1;
          if( strlen(data) > 3 ) {
             int param;
@@ -68,7 +68,7 @@ int main(int argc, char ** argv) {
          for( i=0; i<p.sz; i++ ) printf("%02X ", p.data[i]);
          printf("\n");
       }
-      if( strncmp(data, "address", 7) == 0 ) {
+      if( data && strncmp(data, "address", 7) == 0 ) {
          /* set or read the address */
          char * start = data;
          start += 7;
@@ -112,7 +112,7 @@ int main(int argc, char ** argv) {
          }
          printf("\n");
       }*/
-   } while( strcmp(data, "exit") );
+   } while( data && strcmp(data, "exit") );
 
    free(data);
    return 0;
