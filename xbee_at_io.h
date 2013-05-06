@@ -1,0 +1,22 @@
+
+// AT IO Commands
+//  io sample rate (ATID)
+//  io digital change detection (ATIC)
+//  io PWM0 config (ATP0)
+//  io DIO11 config (ATP1)
+//  io DIO12 config (ATP2)
+//  io DIO13 config (ATP3)
+//  io AD0/DIO0 config (ATD0)
+//  io AD1/DIO1 config (ATD1)
+//  io AD2/DIO2 config (ATD2)
+//  io AD3/DIO3 config (ATD3)
+//  io DIO4 config (ATD4)
+//  io DIO5 config (ATD5)
+//  io DIO8 config (ATD8)
+//  io led blink time (ATLT)
+//  io pull-up config (ATPR)
+//  io RSSI PWM (ATRP)
+//  io supply voltage (AT%V)
+//  io voltage monitoring (ATV+)
+//  io module temperature (ATTP) (PRO S2B only)
+//
