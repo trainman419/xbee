@@ -9,6 +9,7 @@
 #include <serial/serial.h>
 
 #include <string>
+#include <list>
 
 #include <stdlib.h>
 #include <ctype.h>
@@ -74,50 +75,49 @@ std::list<std::string> parts(std::string line) {
    return result;
 }
 
-prefix_map<command> commands;
+command * commands;
 
 // get tab-completions
-char * xbsh_completion_function(const char * text, int state) {
-   static std::list<std::string> completions;
-   static std::list<std::string>::iterator itr;
-   if( state == 0 ) {
-      // TODO: recurse on tab-completions for multiple words in input
-      completions = commands.get_keys(text);
-      itr = completions.begin();
-   }
-   char * res = 0;
-   if( itr != completions.end() ) {
-      res = (char*)malloc(itr->length()+1);
-      memcpy(res, itr->c_str(), itr->length()+1);
-      itr++;
-   }
-   return res;
-}
-
 char ** xbsh_attempt_completion_func(const char * text, int start, int end) {
-   std::list<std::string> p = parts(std::string(text, text+start));
+   std::list<std::string> p = parts(std::string(rl_line_buffer, 
+            rl_line_buffer+start));
 
    // no more tab-complete:
    rl_attempted_completion_over = 1;
 
-   command * c = commands.get(p.front());
+   command * c = commands;
    for( std::list<std::string>::iterator itr = p.begin();
          c && itr != p.end(); 
          itr++ ) {
       c = c->get_subcommand(*itr);
    }
+
    if( c ) {
-      std::list<std::string> completions = 
-         c->get_completions(std::string(text+start, text+end));
-      char ** result = (char**)malloc(sizeof(char*) * (completions.size()+1));
-      int i = 0;
-      BOOST_FOREACH( std::string comp, completions ) {
-         result[i] = (char*)malloc(sizeof(char) * (comp.length()+1));
-         memcpy(result[i], comp.c_str(), comp.length()+1);
-         i++;
+      std::list<std::string> completions = c->get_completions(text);
+
+      if( completions.size() > 0 ) {
+         char ** result = 
+            (char**)malloc(sizeof(char*) * (completions.size()+2));
+
+         int i = 0;
+
+         if( completions.size() > 1 ) {
+            result[0] = (char*)malloc(strlen(text)+1);
+            memcpy(result[0], text, strlen(text)+1);
+            i = 1;
+         }
+
+         BOOST_FOREACH( std::string comp, completions ) {
+            result[i] = (char*)malloc(sizeof(char) * (comp.length()+1));
+            memcpy(result[i], comp.c_str(), comp.length()+1);
+            i++;
+         }
+         result[i] = NULL;
+
+         return result;
+      } else {
+         return NULL;
       }
-      result[i] = NULL;
-      return result;
    } else {
       // nothing to get completions for
       return NULL;
@@ -126,11 +126,12 @@ char ** xbsh_attempt_completion_func(const char * text, int start, int end) {
 
 int main(int argc, char ** argv) { 
    // initialize readline
-   rl_completion_entry_function = xbsh_completion_function;
+   rl_attempted_completion_function = xbsh_attempt_completion_func;
+
    using_history();
 
    // initialize command tree:
-   setup_commands(&commands);
+   commands = setup_commands();
 
    // readline main loop
    char * line;
@@ -140,7 +141,7 @@ int main(int argc, char ** argv) {
          printf("%s\n", part.c_str() );
       }
       /*
-      command * f = commands.get(line);
+      command * f = commands->get_subcommand(line);
       if( f ) {
          add_history(line);
          int r = f->run(line);

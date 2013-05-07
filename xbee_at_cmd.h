@@ -8,8 +8,7 @@
 #define XBEE_AT_CMD_H
 
 #include <string>
-
-#include "prefix_map.h"
+#include <list>
 
 // every shell command is a function
 //  args is the remainder of the line, with leading spaces stripped
@@ -39,6 +38,6 @@ class command {
 
 int fake_cmd(char * args);
 
-void setup_commands(prefix_map<command> * map);
+command * setup_commands();
 
 #endif
