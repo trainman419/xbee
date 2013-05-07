@@ -10,6 +10,8 @@
 #define PREFIX_MAP_H
 
 #include <string>
+#include <list>
+#include <queue>
 
 template <class T> class prefix_map {
    public:
@@ -94,6 +96,48 @@ template <class T> class prefix_map {
          } else {
             map = new prefix_node(id[0], obj);
          }
+      }
+
+      std::list<std::string> get_keys(std::string prefix) {
+         std::list<std::string> result;
+         prefix_node * n = map;
+         int depth = 0;
+         // recurse down to our prefix
+         while(n && depth < prefix.length() ) {
+            if(n->prefix == prefix[depth]) {
+               if(n->leaf) {
+                  // if we hit a leaf node, return
+                  //
+                  // if the leaf node is at the right depth, return it
+                  if( depth+1 == prefix.length() ) {
+                     result.push_back(n->child->name);
+                  }
+                  return result;
+               } else {
+                  n = n->children;
+                  depth++;
+               }
+            } else {
+               n = n->next;
+            }
+         }
+         // gather all of the strings under our prefix
+         std::queue<prefix_node*> nodes;
+         nodes.push(n);
+         while(!nodes.empty()) {
+            n = nodes.front();
+            nodes.pop();
+            if(n->leaf) {
+               result.push_back(n->child->name);
+            } else {
+               nodes.push(n->children);
+            }
+            if(n->next) {
+               nodes.push(n->next);
+            }
+         }
+         result.sort();
+         return result;
       }
 
    private:

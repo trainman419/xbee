@@ -71,6 +71,42 @@ int test() {
    t = test_m.get("bar");
    p();
    assert(!t);
+
+   std::list<std::string> k;
+   std::list<std::string>::iterator k_itr;
+
+   p();
+   k = test_m.get_keys("bar");
+   // should be empty
+   assert(k.size() == 0);
+   
+   p();
+   k = test_m.get_keys("");
+   // should contain "asdf", "asfd", "b"
+   assert(k.size() == 3);
+   k_itr = k.begin();
+   assert(*k_itr == "asdf");
+   k_itr++;
+   assert(*k_itr == "asfd");
+   k_itr++;
+   assert(*k_itr == "b");
+   
+   p();
+   k = test_m.get_keys("b");
+   // should contain "b"
+   assert(k.size() == 1);
+   k_itr = k.begin();
+   assert(*k_itr == "b");
+
+   p();
+   k = test_m.get_keys("a");
+   // should contain "asdf", "asfd"
+   assert(k.size() == 2);
+   k_itr = k.begin();
+   assert(*k_itr == "asdf");
+   k_itr++;
+   assert(*k_itr == "asfd");
+
 }
 
 int main(int argc, char ** argv) {
