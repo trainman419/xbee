@@ -18,8 +18,9 @@ clean:
 	-rm -rf $(TARGETS) *.o .*.mk
 .PHONY: clean
 
-test: prefix_map_test
+test: prefix_map_test xbsh2
 	./prefix_map_test	
+	./xbsh2 < test_xbsh2_1.in | diff -u --strip-trailing-cr - test_xbsh2_1.out
 .PHONY: test
 
 .%.mk: %.c

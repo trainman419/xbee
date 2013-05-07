@@ -1,4 +1,3 @@
-
 // AT commands (mapping to AT commands):
 //
 //  device type (ATDD)
@@ -20,6 +19,18 @@
 //  comission (ATCB)
 //  node discover (ATND)
 //  resolve NI (ATDN)
+//
+//  TODO: move to I/O command set
 //  force IO sample (ATIS)
 //  force sensor sample (AT1S)
 
+
+#ifndef XBEE_AT_H
+#define XBEE_AT_H
+
+#include <string>
+
+// get the AT command for a given string
+typedef std::string (*command_at)(std::string args);
+
+#endif

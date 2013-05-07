@@ -1,0 +1,37 @@
+[?1034hxbsh> 
+apply       defaults    encryption  reset       serial      
+at          diag        io          resolve     sleep       
+comission   discover    net         rf          write       
+xbsh> a
+apply  at     
+xbsh> a
+a
+xbsh> b
+b
+xbsh> comission 
+comission
+xbsh> d
+defaults  diag      discover  
+xbsh> d
+d
+xbsh> s
+serial  sleep   
+xbsh> s
+s
+xbsh> write 
+write
+xbsh> a b c d
+a
+b
+c
+d
+xbsh> a  b    c     d
+a
+b
+c
+d
+xbsh> di
+diag      discover  
+xbsh> di
+di
+xbsh> 
