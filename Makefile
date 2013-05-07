@@ -1,7 +1,10 @@
 CFLAGS=-g
+CXXFLAGS=-g
 LDFLAGS=-lreadline -lserial
 
-all: xbsh sign xbsh2 prefix_map_test
+OBJS=xbsh sign xbsh2 prefix_map_test
+
+all: $(OBJS)
 .PHONY: all
 
 xbsh: xbsh.o xbee_api.o
@@ -21,7 +24,7 @@ sign: sign.o xbee_api.o
 sign.o: xbee_api.h
 
 clean:
-	-rm -rf sign xbsh xbsh2 *.o
+	-rm -rf $(OBJS) *.o
 .PHONY: clean
 
 test: prefix_map_test
