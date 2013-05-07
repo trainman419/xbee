@@ -123,7 +123,9 @@ template <class T> class prefix_map {
          }
          // gather all of the strings under our prefix
          std::queue<prefix_node*> nodes;
-         nodes.push(n);
+         if(n) {
+            nodes.push(n);
+         }
          while(!nodes.empty()) {
             n = nodes.front();
             nodes.pop();

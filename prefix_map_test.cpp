@@ -107,6 +107,10 @@ int test() {
    k_itr++;
    assert(*k_itr == "asfd");
 
+   p();
+   k = test_m.get_keys("c");
+   // should be empty
+   assert(k.size() == 0);
 }
 
 int main(int argc, char ** argv) {
