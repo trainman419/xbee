@@ -111,6 +111,21 @@ int test() {
    k = test_m.get_keys("c");
    // should be empty
    assert(k.size() == 0);
+
+   test_m.put("xyzzy", data+3);
+   test_m.put("xyaaa", data+4);
+
+   p();
+   k = test_m.get_keys("xy");
+   assert(k.size() == 2);
+
+   p();
+   k = test_m.get_keys("xyz");
+   assert(k.size() == 1);
+
+   p();
+   k = test_m.get_keys("xyzz");
+   assert(k.size() == 1);
 }
 
 int main(int argc, char ** argv) {
