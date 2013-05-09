@@ -106,11 +106,15 @@ template <class T> class prefix_map {
          while(n && depth < prefix.length() ) {
             if(n->prefix == prefix[depth]) {
                if(n->leaf) {
-                  // if we hit a leaf node, return
-                  //
-                  // if the leaf node is at the right depth, return it
-                  if( depth+1 == prefix.length() ) {
-                     result.push_back(n->child->name);
+                  // we found a leaf node that matches
+                  prefix_obj * o = n->child;
+
+                  // check that our prefix is long enough
+                  if( prefix.length() <= o->name.length() ) {
+                     // check that our prefix matches
+                     if( o->name.substr(0, prefix.length()) == prefix ) {
+                        result.push_back(n->child->name);
+                     }
                   }
                   return result;
                } else {
