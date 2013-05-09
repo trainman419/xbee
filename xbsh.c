@@ -145,7 +145,7 @@ int serial_open(char * device) {
    newtio.c_cc[VEOF]     = 4;     /* Ctrl-d */
    newtio.c_cc[VTIME]    = 1;     /* inter-character timer deciseconds */
    newtio.c_cc[VMIN]     = 0;     /* blocking read until n characters arrive */
-   newtio.c_cc[VSWTC]    = 0;     /* '\0' */
+   //newtio.c_cc[VSWTC]    = 0;     /* '\0' */
    newtio.c_cc[VSTART]   = 0;     /* Ctrl-q */
    newtio.c_cc[VSTOP]    = 0;     /* Ctrl-s */
    newtio.c_cc[VSUSP]    = 0;     /* Ctrl-z */
