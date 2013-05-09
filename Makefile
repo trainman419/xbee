@@ -1,6 +1,7 @@
 CFLAGS=-g
 CXXFLAGS=-g
-LDFLAGS=-lreadline -lserial
+LDLIBS=-lreadline -lserial
+LINK.o=$(CXX)
 
 TARGETS=xbsh sign xbsh2 prefix_map_test
 OBJS=xbee_api.o xbee_at_cmd.o
@@ -15,7 +16,7 @@ xbsh2: xbsh2.o xbee_api.o xbee_at_cmd.o
 sign: sign.o xbee_api.o
 
 clean:
-	-rm -rf $(TARGETS) *.o .*.mk
+	-rm -rf $(TARGETS) *.o
 .PHONY: clean
 
 test: prefix_map_test xbsh2
@@ -24,10 +25,10 @@ test: prefix_map_test xbsh2
 .PHONY: test
 
 .%.mk: %.c
-	$(CC) -MM $^ -MF $@
+	$(CC) -MMD -c $^ -MF $@
 
 .%.mk: %.cpp
-	$(CXX) -MM $^ -MF $@
+	$(CXX) -MMD -c $^ -MF $@
 
 include $(TARGETS:%=.%.mk)
 include $(OBJS:%.o=.%.mk)
