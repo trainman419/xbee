@@ -72,12 +72,56 @@ command * enc[] = {
    0
 };
 
+command * io_config[] = {
+   new command_child( "pull-up", fake_cmd),
+   new command_child( "PWM0",    fake_cmd),
+   // DIO
+   new command_child( "DIO0",    fake_cmd),
+   new command_child( "DIO1",    fake_cmd),
+   new command_child( "DIO2",    fake_cmd),
+   new command_child( "DIO3",    fake_cmd),
+   new command_child( "DIO4",    fake_cmd),
+   new command_child( "DIO5",    fake_cmd),
+   // DIO6-7 are serial
+   new command_child( "DIO8",    fake_cmd),
+   // DIO9-10 are serial
+   new command_child( "DIO11",    fake_cmd),
+   new command_child( "DIO12",    fake_cmd),
+   new command_child( "DIO13",    fake_cmd),
+
+   // A2D
+   new command_child( "AD0",      fake_cmd),
+   new command_child( "AD1",      fake_cmd),
+   new command_child( "AD2",      fake_cmd),
+   new command_child( "AD3",      fake_cmd),
+   
+   0
+};
+
+command * io_voltage[] = {
+   new command_child( "supply",     fake_cmd),
+   new command_child( "monitoring", fake_cmd),
+   0
+};
+
+command * io[] = {
+   new command_parent( "config",    io_config),
+   new command_parent( "voltage",   io_voltage),
+
+   new command_child( "sample-rate",      fake_cmd),
+   new command_child( "change-detection", fake_cmd),
+   new command_child( "led-blink-time",   fake_cmd),
+   new command_child( "RSSI-PWM",         fake_cmd),
+   new command_child( "temperature",      fake_cmd),
+   0
+};
+
 command * toplevel[] = {
    new command_parent( "diag",       NULL ),
    new command_parent( "at",         NULL ),
    new command_parent( "reset",      NULL ),
    new command_parent( "discover",   NULL ),
-   new command_parent( "io",         NULL ),
+   new command_parent( "io",         io ),
    new command_parent( "encryption", enc ),
    new command_parent( "net",        NULL ),
    new command_parent( "rf",         NULL ),

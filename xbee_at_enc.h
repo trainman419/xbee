@@ -3,5 +3,5 @@
 //  encryption enable (ATEE)
 //  encryption options (ATEO)
 //  encryption key (ATNK)
-//  encryption link key (ATKY)
+//  encryption link-key (ATKY)
 //
