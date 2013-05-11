@@ -136,20 +136,20 @@ int main(int argc, char ** argv) {
    // readline main loop
    char * line;
    while( line = readline("xbsh> ") ) {
-      std::list<std::string> p = parts(line);
-      BOOST_FOREACH( std::string part, p ) {
-         printf("%s\n", part.c_str() );
+      std::list<std::string> line_parts = parts(line);
+      command * cmd = commands;
+      BOOST_FOREACH( std::string part, line_parts ) {
+         if(cmd) {
+            cmd = cmd->get_subcommand(part);
+         }
       }
-      /*
-      command * f = commands->get_subcommand(line);
-      if( f ) {
+      if( cmd ) {
          add_history(line);
-         int r = f->run(line);
+         int r = cmd->run(line);
          printf("%d\n", r);
       } else {
          printf("Unknown command %s\n", line);
       }
-      */
       free(line);
    }
    printf("\n");

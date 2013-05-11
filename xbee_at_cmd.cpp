@@ -26,6 +26,8 @@ class command_child : public command {
 
    public:
       command_child(std::string n, command_f c) : command(n, ""), cmd(c) {}
+
+      virtual int run(char * args);
 };
 
 command_parent::command_parent(std::string n, command ** sub) :
@@ -46,15 +48,27 @@ std::list<std::string> command_parent::get_completions(std::string prefix) {
    return subcommands.get_keys(prefix);
 }
 
+int command_child::run(char * args) {
+   return cmd(args);
+}
+
 command * serial[] = {
    new command_parent( "api", NULL),
 
-   new command_child( "baud", fake_cmd),
-   new command_child( "parity", fake_cmd),
-   new command_child( "stop", fake_cmd),
+   new command_child( "baud",          fake_cmd),
+   new command_child( "parity",        fake_cmd),
+   new command_child( "stop",          fake_cmd),
    new command_child( "packetization", fake_cmd),
-   new command_child( "DIO6", fake_cmd),
-   new command_child( "DIO7", fake_cmd),
+   new command_child( "DIO6",          fake_cmd),
+   new command_child( "DIO7",          fake_cmd),
+   0
+};
+
+command * enc[] = {
+   new command_child( "link-key",   fake_cmd),
+   new command_child( "enable",     fake_cmd),
+   new command_child( "options",    fake_cmd),
+   new command_child( "key",        fake_cmd),
    0
 };
 
@@ -64,7 +78,7 @@ command * toplevel[] = {
    new command_parent( "reset",      NULL ),
    new command_parent( "discover",   NULL ),
    new command_parent( "io",         NULL ),
-   new command_parent( "encryption", NULL ),
+   new command_parent( "encryption", enc ),
    new command_parent( "net",        NULL ),
    new command_parent( "rf",         NULL ),
    new command_parent( "serial",     serial ),

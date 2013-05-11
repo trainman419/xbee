@@ -23,6 +23,16 @@
 //  TODO: move to I/O command set
 //  force IO sample (ATIS)
 //  force sensor sample (AT1S)
+//
+//  TODO: shell buitins that don't correspond to AT commands:
+//   show configuration
+//   dump configuration to file
+//   load config from file
+//   change serial port parameters on-the-fly
+//    - use case: update baud rate setting, update serial port to match
+//    - serial rate unknown
+//   hard reset via DTR line
+//   firmware loading
 
 
 #ifndef XBEE_AT_H
