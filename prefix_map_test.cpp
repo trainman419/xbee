@@ -126,8 +126,10 @@ int test() {
    p();
    k = test_m.get_keys("xyzz");
    assert(k.size() == 1);
+
+   return 0;
 }
 
 int main(int argc, char ** argv) {
-   test();
+   return test();
 }
