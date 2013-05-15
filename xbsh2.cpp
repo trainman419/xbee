@@ -95,18 +95,25 @@ char ** xbsh_attempt_completion_func(const char * text, int start, int end) {
    if( c ) {
       std::list<std::string> completions = c->get_completions(text);
 
-      if( completions.size() > 0 ) {
+      if( completions.size() == 1 ) {
+         char ** result = (char**)malloc(sizeof(char*) * 2);
+         std::string comp = completions.front();
+         int len = comp.length();
+         result[0] = (char*)malloc(sizeof(char)*(len+2));
+         memcpy(result[0], comp.c_str(), len);
+         result[0][len] = ' ';
+         result[0][len+1] = 0;
+
+         result[1] = 0;
+         return result;
+      } else if( completions.size() > 1 ) {
          char ** result = 
             (char**)malloc(sizeof(char*) * (completions.size()+2));
 
-         int i = 0;
+         result[0] = (char*)malloc(strlen(text)+1);
+         memcpy(result[0], text, strlen(text)+1);
 
-         if( completions.size() > 1 ) {
-            result[0] = (char*)malloc(strlen(text)+1);
-            memcpy(result[0], text, strlen(text)+1);
-            i = 1;
-         }
-
+         int i = 1;
          BOOST_FOREACH( std::string comp, completions ) {
             result[i] = (char*)malloc(sizeof(char) * (comp.length()+1));
             memcpy(result[i], comp.c_str(), comp.length()+1);
@@ -135,8 +142,13 @@ int main(int argc, char ** argv) {
 
    // readline main loop
    char * line;
-   while( line = readline("xbsh> ") ) {
+   while( (line = readline("xbsh> ")) ) {
       std::list<std::string> line_parts = parts(line);
+      std::string arg;
+      if( line_parts.size() > 0 ) {
+         arg = line_parts.back();
+         line_parts.pop_back();
+      }
       command * cmd = commands;
       BOOST_FOREACH( std::string part, line_parts ) {
          if(cmd) {
@@ -144,8 +156,12 @@ int main(int argc, char ** argv) {
          }
       }
       if( cmd ) {
+         if( cmd->get_subcommand(arg) ) {
+            cmd = cmd->get_subcommand(arg);
+            arg = "";
+         }
          add_history(line);
-         int r = cmd->run(line);
+         int r = cmd->run(arg);
          printf("%d\n", r);
       } else {
          printf("Unknown command %s\n", line);

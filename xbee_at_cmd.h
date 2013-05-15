@@ -13,7 +13,7 @@
 // every shell command is a function
 //  args is the remainder of the line, with leading spaces stripped
 //  the return code follows standard POSIX return code semantics
-typedef int (*command_f)(char * args);
+typedef int (*command_f)(const char * args);
 
 class command {
    protected:
@@ -23,7 +23,7 @@ class command {
       command(std::string n, std::string h) : name(n), help(h) {}
 
    public:
-      virtual int run(char * args) { return 0; }
+      virtual int run(std::string args) { return 0; }
       virtual std::string get_name() { return name; }
       virtual std::string get_help() { return help; }
 
@@ -36,7 +36,7 @@ class command {
       }
 };
 
-int fake_cmd(char * args);
+int fake_cmd(const char * args);
 
 command * setup_commands();
 

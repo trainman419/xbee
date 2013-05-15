@@ -2,9 +2,11 @@
 #include "xbee_at_cmd.h"
 #include "prefix_map.h"
 
+#include <boost/foreach.hpp>
+
 #include <stdio.h>
 
-int fake_cmd(char * args) {
+int fake_cmd(const char * args) {
    printf("Fake command: %s\n", args);
    return 0;
 }
@@ -18,6 +20,7 @@ class command_parent : public command {
 
       virtual command * get_subcommand(std::string prefix);
       virtual std::list<std::string> get_completions(std::string prefix);
+      virtual int run(std::string args);
 };
 
 class command_child : public command {
@@ -25,13 +28,13 @@ class command_child : public command {
       command_f cmd;
 
    public:
-      command_child(std::string n, command_f c) : command(n, ""), cmd(c) {}
+      command_child(std::string n, command_f c) : command(n, "child"), cmd(c) {}
 
-      virtual int run(char * args);
+      virtual int run(std::string args);
 };
 
 command_parent::command_parent(std::string n, command ** sub) :
-   command(n, "")
+   command(n, "parent")
 {
    if( sub ) {
       for( int i = 0; sub[i]; i++ ) {
@@ -48,19 +51,45 @@ std::list<std::string> command_parent::get_completions(std::string prefix) {
    return subcommands.get_keys(prefix);
 }
 
-int command_child::run(char * args) {
-   return cmd(args);
+int command_parent::run(std::string args) {
+   std::list<std::string> sub = subcommands.get_keys(args);
+   printf("\n");
+   unsigned long maxlen = 0;
+   BOOST_FOREACH( std::string s, sub ) {
+      maxlen = std::max(maxlen, s.length());
+   }
+   BOOST_FOREACH( std::string s, sub ) {
+      unsigned long l = maxlen - s.length();
+      std::string pad(" ");
+      for( unsigned long i = 0; i<l; i++ ) {
+         pad += " ";
+      }
+      std::string help = subcommands.get(s)->get_help();
+      printf("   %s:%s%s\n", s.c_str(), pad.c_str(), help.c_str());
+   }
+   printf("\n");
+   return 0;
 }
 
-command * serial[] = {
-   new command_parent( "api", NULL),
+int command_child::run(std::string args) {
+   return cmd(args.c_str());
+}
 
-   new command_child( "baud",          fake_cmd),
-   new command_child( "parity",        fake_cmd),
-   new command_child( "stop",          fake_cmd),
-   new command_child( "packetization", fake_cmd),
-   new command_child( "DIO6",          fake_cmd),
-   new command_child( "DIO7",          fake_cmd),
+command * serial_api[] = {
+   new command_child( "escape", fake_cmd),
+   new command_child( "options", fake_cmd),
+   0
+};
+
+command * serial[] = {
+   new command_parent( "api", serial_api),
+
+   new command_child( "baud",                  fake_cmd),
+   new command_child( "parity",                fake_cmd),
+   new command_child( "stop",                  fake_cmd),
+   new command_child( "packetization-timeout", fake_cmd),
+   new command_child( "DIO6",                  fake_cmd),
+   new command_child( "DIO7",                  fake_cmd),
    0
 };
 
@@ -75,6 +104,7 @@ command * enc[] = {
 command * io_config[] = {
    new command_child( "pull-up", fake_cmd),
    new command_child( "PWM0",    fake_cmd),
+
    // DIO
    new command_child( "DIO0",    fake_cmd),
    new command_child( "DIO1",    fake_cmd),
@@ -116,23 +146,132 @@ command * io[] = {
    0
 };
 
-command * toplevel[] = {
-   new command_parent( "diag",       NULL ),
-   new command_parent( "at",         NULL ),
-   new command_parent( "reset",      NULL ),
-   new command_parent( "discover",   NULL ),
-   new command_parent( "io",         io ),
-   new command_parent( "encryption", enc ),
-   new command_parent( "net",        NULL ),
-   new command_parent( "rf",         NULL ),
-   new command_parent( "serial",     serial ),
-   new command_parent( "sleep",      NULL ),
+command * net_short[] = {
+   new command_child( "address", fake_cmd ),
+   new command_child( "parent",  fake_cmd ),
+   0
+};
 
-   new command_child( "resolve",    fake_cmd ),
-   new command_child( "comission",  fake_cmd ),
-   new command_child( "apply",      fake_cmd ),
-   new command_child( "write",      fake_cmd ),
-   new command_child( "defaults",   fake_cmd ),
+command * net_id[] = {
+   new command_child( "node",    fake_cmd ),
+   new command_child( "cluster", fake_cmd ),
+   0
+};
+
+command * net_max[] = {
+   new command_child( "unicast",   fake_cmd ),
+   new command_child( "broadcast", fake_cmd ),
+   0
+};
+
+command * net_pan[] = {
+   new command_child( "operating", fake_cmd ),
+   new command_child( "long",      fake_cmd ),
+   new command_child( "short",     fake_cmd ),
+   0
+};
+
+command * net_node[] = {
+   new command_child( "timeout", fake_cmd ),
+   new command_child( "options", fake_cmd ),
+   0
+};
+
+command * net_join[] = {
+   new command_child( "notification", fake_cmd ),
+   new command_child( "time",         fake_cmd ),
+   0
+};
+
+command * net[] = {
+   new command_parent( "short",          net_short ),
+   new command_parent( "ID",             net_id    ),
+   new command_parent( "max-hops",       net_max   ),
+   new command_parent( "PAN-ID",         net_pan   ),
+   new command_parent( "node-discovery", net_node  ),
+   new command_parent( "join",           net_join  ),
+
+   new command_child( "max-payload", fake_cmd ),
+   new command_child( "destination", fake_cmd ),
+   new command_child( "children",    fake_cmd ),
+   new command_child( "serial",      fake_cmd ),
+   0
+};
+
+command * rf_scan[] = {
+   new command_child( "channels", fake_cmd ),
+   new command_child( "duration", fake_cmd ),
+   0
+};
+
+command * rf_power[] = {
+   new command_child( "level", fake_cmd ),
+   new command_child( "mode",  fake_cmd ),
+   new command_child( "peak",  fake_cmd ),
+   0
+};
+
+command * rf[] = {
+   new command_parent( "scan",  rf_scan  ),
+   new command_parent( "power", rf_power ),
+
+   new command_child( "operating-channel",    fake_cmd ),
+   new command_child( "channel-verification", fake_cmd ),
+   new command_child( "zigbee-profile",       fake_cmd ),
+   new command_child( "RSSI",                 fake_cmd ),
+   0
+};
+
+command * sleep_c[] = {
+   new command_child( "mode",         fake_cmd ),
+   new command_child( "period-count", fake_cmd ),
+   new command_child( "period-time",  fake_cmd ),
+   new command_child( "timeout",      fake_cmd ),
+   new command_child( "options",      fake_cmd ),
+   new command_child( "wake-host",    fake_cmd ),
+   new command_child( "now",          fake_cmd ),
+   new command_child( "poll-rate",    fake_cmd ),
+   0
+};
+
+command * diag[] = {
+   new command_child( "fw-version",       fake_cmd ),
+   new command_child( "hw-version",       fake_cmd ),
+   new command_child( "associate-status", fake_cmd ),
+   0
+};
+
+command * at_c[] = {
+   new command_child( "mode-timeout",      fake_cmd ),
+   new command_child( "guard-time",        fake_cmd ),
+   new command_child( "command-character", fake_cmd ),
+   0
+};
+
+command * reset_c[] = {
+   new command_child( "network", fake_cmd ),
+   new command_child( "soft",    fake_cmd ),
+   new command_child( "hard",    fake_cmd ),
+   0
+};
+
+command * toplevel[] = {
+   new command_parent( "diag",       diag    ),
+   new command_parent( "at",         at_c    ),
+   new command_parent( "reset",      reset_c ),
+   new command_parent( "io",         io      ),
+   new command_parent( "encryption", enc     ),
+   new command_parent( "net",        net     ),
+   new command_parent( "rf",         rf      ),
+   new command_parent( "serial",     serial  ),
+   new command_parent( "sleep",      sleep_c ),
+
+   new command_child( "discover-nodes",   fake_cmd ),
+   new command_child( "resolve-ni",       fake_cmd ),
+   new command_child( "comission",        fake_cmd ),
+   new command_child( "apply",            fake_cmd ),
+   new command_child( "write",            fake_cmd ),
+   new command_child( "defaults",         fake_cmd ),
 
    0
 };

@@ -1,21 +1,25 @@
 
 // AT network commands
-//  net destination (ATDL + ATDH)
 //  net short address (ATMY)
 //  net short parent  (ATMP)
+//
+//  net ID node (ATNI)
+//  net ID cluster (ATCI)
+//
+//  net max-hops unicast (ATNH)
+//  net max-hops broadcast (ATBH)
+//
+//  net PAN-ID operating (ATOP) - current PAN ID
+//  net PAN-ID long (ATID) - PAN ID to join (0 for any)
+//  net PAN-ID short (ATOI)
+//
+//  net node-discovery timeout (ATNT)
+//  net node-discovery options (ATNO)
+//
+//  net join notification (ATJN)
+//  net join time (ATNJ)
+//
+//  net max-payload (ATNP)
+//  net destination (ATDL + ATDH)
 //  net children (ATNC)
 //  net serial (ATSL + ATSH)
-//  net node ID (ATNI)
-//
-//  net cluster ID (ATCI)
-//  net long PAN ID (ATID) - PAN ID to join (0 for any)
-//  net operating PAN ID (ATOP) - current PAN ID
-//  net max unicast hops (ATNH)
-//  net max broadcast hops (ATBH)
-//  net short PAN ID (ATOI)
-//  net join notification (ATJN)
-//
-//  net max payload (ATNP)
-//  net node discovery timeout (ATNT)
-//  net node discovery options (ATNO)
-//  net join time (ATNJ)
