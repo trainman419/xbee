@@ -57,6 +57,38 @@
 //    the user's prompt.
 //
 
+xbsh_state::xbsh_state(std::string port, int baud ) :
+  // TODO: spend more time choosing timeouts
+  serial(port, baud, serial::Timeout(1000, 1000, 0))
+{
+}
+
+void xbsh_state::send_packet(packet p) {
+   // TODO
+}
+
+void xbsh_state::send_AT(std::string at_str, char * data, int data_len) {
+   if( at_str.length() != 2 ) {
+      fprintf(stderr, "Error: bad AT command: %s", at_str.c_str());
+      return;
+   }
+   char * d = (char*)malloc(at_str.length() + data_len);
+   memcpy(d, at_str.c_str(), 2);
+   memcpy(d + 2, data, data_len);
+
+   packet p;
+   if( remotes.size() == 0 ) {
+      p = at(d);
+   } else {
+      xbee_net net;
+      net.c_net[0] = 0xFF;
+      net.c_net[1] = 0xFE;
+      p = remote_at(remotes.back(), net, d);
+   }
+   send_packet(p);
+   free(d);
+}
+
 // split a string into whitespace-separated parts
 std::list<std::string> parts(std::string line) {
    const int l = line.length();
@@ -140,6 +172,29 @@ int main(int argc, char ** argv) {
    // initialize command tree:
    commands = setup_commands();
 
+   std::string port;
+   if( argc > 1 ) {
+      port = argv[1];
+   } else {
+      port = "/dev/ttyUSB0";
+   }
+
+   int baud = 9600;
+   if( argc > 2 ) {
+      sscanf(argv[2], "%d", &baud);
+   }
+
+   xbsh_state * state;
+   try {
+      state = new xbsh_state(port, baud);
+   } catch( serial::PortNotOpenedException & e ) {
+      printf("Error opening serial port: %s\n", e.what());
+      return -1;
+   } catch( serial::IOException & e ) {
+      printf("Error opening serial port: %s\n", e.what());
+      return -2;
+   }
+
    // readline main loop
    char * line;
    while( (line = readline("xbsh> ")) ) {
@@ -161,7 +216,7 @@ int main(int argc, char ** argv) {
             arg = "";
          }
          add_history(line);
-         int r = cmd->run(arg);
+         int r = cmd->run(state, arg);
          printf("%d\n", r);
       } else {
          printf("Unknown command %s\n", line);

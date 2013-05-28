@@ -1,4 +1,18 @@
+// how do we pass the serial port around?
+//  variable arguments to run():
+//    state class
+//    command arguments
+//  run() arguments passed all the way down the stack
+//  run() does:
+//   * argument parsing
+//   * packet construction
+//   * send over serial port
+//   * wait for response(s)
+//   * data reception
+//   * response parsing
+//   * response printing
 
+#include "xbee_at.h"
 #include "xbee_at_cmd.h"
 #include "prefix_map.h"
 
@@ -6,32 +20,41 @@
 
 #include <stdio.h>
 
+/*
 int fake_cmd(const char * args) {
    printf("Fake command: %s\n", args);
    return 0;
 }
+*/
 
-class command_parent : public command {
-   private:
-      prefix_map<command> subcommands;
-
+class fake_at_cmd : public at_cmd {
    public:
-      command_parent(std::string n, command ** sub);
-
-      virtual command * get_subcommand(std::string prefix);
-      virtual std::list<std::string> get_completions(std::string prefix);
-      virtual int run(std::string args);
+      virtual int run(xbsh_state * state, std::string args) {
+         printf("Fake command: %s\n", args.c_str());
+         return 0;
+      }
 };
 
-class command_child : public command {
-   private:
-      command_f cmd;
+at_cmd * fake_cmd = new fake_at_cmd();
 
-   public:
-      command_child(std::string n, command_f c) : command(n, "child"), cmd(c) {}
-
-      virtual int run(std::string args);
-};
+// types of child commands:
+//  read-only
+//  read/write
+//  write-only
+//  command (disassociate, comission, etc)
+//
+// types of values:
+//  symbolic
+//  bitmask
+//  numeric scaled w/units
+//  string (length limit)
+//  fixed-size hex
+//
+// types of responses:
+//  no response
+//  single response
+//  variable number of responses (null-terminated?)
+//  asynchronous responses (handle as "no response")
 
 command_parent::command_parent(std::string n, command ** sub) :
    command(n, "parent")
@@ -51,7 +74,7 @@ std::list<std::string> command_parent::get_completions(std::string prefix) {
    return subcommands.get_keys(prefix);
 }
 
-int command_parent::run(std::string args) {
+int command_parent::run(xbsh_state * state, std::string args) {
    std::list<std::string> sub = subcommands.get_keys(args);
    printf("\n");
    unsigned long maxlen = 0;
@@ -71,17 +94,17 @@ int command_parent::run(std::string args) {
    return 0;
 }
 
-int command_child::run(std::string args) {
-   return cmd(args.c_str());
+int command_child::run(xbsh_state * state, std::string args) {
+   return cmd->run(state, args.c_str());
 }
 
 command * serial_api[] = {
-   new command_child( "escape", fake_cmd),
+   new command_child( "escape",  fake_cmd),
    new command_child( "options", fake_cmd),
    0
 };
 
-command * serial[] = {
+command * serial_c[] = {
    new command_parent( "api", serial_api),
 
    new command_child( "baud",                  fake_cmd),
@@ -234,36 +257,15 @@ command * sleep_c[] = {
    0
 };
 
-command * diag[] = {
-   new command_child( "fw-version",       fake_cmd ),
-   new command_child( "hw-version",       fake_cmd ),
-   new command_child( "associate-status", fake_cmd ),
-   0
-};
-
-command * at_c[] = {
-   new command_child( "mode-timeout",      fake_cmd ),
-   new command_child( "guard-time",        fake_cmd ),
-   new command_child( "command-character", fake_cmd ),
-   0
-};
-
-command * reset_c[] = {
-   new command_child( "network", fake_cmd ),
-   new command_child( "soft",    fake_cmd ),
-   new command_child( "hard",    fake_cmd ),
-   0
-};
-
 command * toplevel[] = {
-   new command_parent( "diag",       diag    ),
-   new command_parent( "at",         at_c    ),
-   new command_parent( "reset",      reset_c ),
+   new command_parent( "diag",       diag()  ),
+   new command_parent( "at",         at_c()  ),
+   new command_parent( "reset",      reset_c() ),
    new command_parent( "io",         io      ),
    new command_parent( "encryption", enc     ),
    new command_parent( "net",        net     ),
    new command_parent( "rf",         rf      ),
-   new command_parent( "serial",     serial  ),
+   new command_parent( "serial",     serial_c ),
    new command_parent( "sleep",      sleep_c ),
 
    new command_child( "discover-nodes",   fake_cmd ),
@@ -272,6 +274,7 @@ command * toplevel[] = {
    new command_child( "apply",            fake_cmd ),
    new command_child( "write",            fake_cmd ),
    new command_child( "defaults",         fake_cmd ),
+   new command_child( "device-type",      fake_cmd ),
 
    0
 };
