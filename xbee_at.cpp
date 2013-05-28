@@ -8,6 +8,9 @@
 
 #include "xbee_at.h"
 
+#include <boost/foreach.hpp>
+#include <stdint.h>
+
 int at_cmd_ro::run(xbsh_state * state, std::string arg) {
    if( arg.length() > 0 ) {
       printf("Error: this property is read-only\n");
@@ -43,18 +46,27 @@ class at_cmd_ro_hex : public at_cmd_ro {
       at_cmd_ro_hex(std::string at, int l) : at_str(at), len(l) {}
 
       virtual int read(xbsh_state * state) {
-         printf("%s (%d)\n", at_str.c_str(), len);
-         printf(" 0xdead\n");
+         state->send_AT(at_str, 0, 0);
+         api_frame * result = state->read_AT();
+         if( result ) {
+            std::vector<uint8_t> data = result->get_data();
+            BOOST_FOREACH( uint8_t u, data ) {
+              printf("%02X", u);
+            }
+            printf("\n");
+         } else {
+            printf("Failed to parse response packet\n");
+         }
          return 0;
       }
 };
 
 command ** diag() {
    command ** r = new command*[4];
-   r[0] = new command_child( "fw-version",       new at_cmd_ro_hex("ATVR", 4) );
-   r[1] = new command_child( "hw-version",       new at_cmd_ro_hex("ATHV", 4) );
+   r[0] = new command_child( "fw-version",       new at_cmd_ro_hex("VR", 2) );
+   r[1] = new command_child( "hw-version",       new at_cmd_ro_hex("HV", 2) );
    // TODO: parse and pretty-print results
-   r[2] = new command_child( "associate-status", new at_cmd_ro_hex("ATAI", 2) );
+   r[2] = new command_child( "associate-status", new at_cmd_ro_hex("AI", 1) );
    r[3] = 0;
    return r;
 }

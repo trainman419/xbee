@@ -65,6 +65,7 @@ xbsh_state::xbsh_state(std::string port, int baud ) :
 
 void xbsh_state::send_packet(packet p) {
    // TODO
+   serial.write(p.data, p.sz);
 }
 
 void xbsh_state::send_AT(std::string at_str, char * data, int data_len) {
@@ -87,6 +88,84 @@ void xbsh_state::send_AT(std::string at_str, char * data, int data_len) {
    }
    send_packet(p);
    free(d);
+}
+
+api_frame * xbsh_state::read_AT() {
+   std::vector<uint8_t> data;
+   serial.read(data, 64);
+
+   if( data[0] == 0x7E ) {
+      int len = data[2] | (data[1] << 8);
+      if( len + 4 == data.size() ) {
+         uint8_t checksum = data[3 + len];
+         uint8_t sum = 0;
+         for( int i=0; i<len; ++i ) {
+            sum += data[3+i];
+         }
+         sum = 0xFF - sum;
+         if( sum == checksum ) {
+            uint8_t type = data[3];
+            uint8_t id = data[4];
+            switch(type) {
+               case API_AT_RESP:
+                  {
+                     if( len < 5 ) {
+                        printf("Packet too short\n");
+                        return NULL;
+                     }
+                     std::string command;
+                     command.push_back(data[5]);
+                     command.push_back(data[6]);
+                     uint8_t status = data[7];
+                     std::vector<uint8_t> d(len - 5);
+                     for( int i=0; i<len-5; i++ ) {
+                        d[i] = data[i+8];
+                     }
+                     return new api_frame(type, id, status, command, d);
+                  }
+               case API_REMOTE_AT_RESP:
+                  {
+                     if( len < 15 ) {
+                        printf("Packet too short\n");
+                        return NULL;
+                     }
+                     xbee_addr source;
+                     source.c_addr[0] = data[12];
+                     source.c_addr[1] = data[11];
+                     source.c_addr[2] = data[10];
+                     source.c_addr[3] = data[9];
+                     source.c_addr[4] = data[8];
+                     source.c_addr[5] = data[7];
+                     source.c_addr[6] = data[6];
+                     source.c_addr[7] = data[5];
+                     xbee_net net;
+                     net.c_net[0] = data[14];
+                     net.c_net[1] = data[13];
+                     std::string command;
+                     command.push_back(data[15]);
+                     command.push_back(data[16]);
+                     uint8_t status = data[17];
+                     std::vector<uint8_t> d(len - 15);
+                     for( int i=0; i<len-15; i++ ) {
+                        d[i] = data[i+18];
+                     }
+                     return new api_remote_frame(type, id, status, command,
+                         source, net, d);
+                  }
+               default:
+                  printf("Unknown response type\n");
+                  break;
+            }
+         } else {
+            printf("Checksum failed\n");
+         }
+      }
+   } else {
+      // unknown packet type
+      printf("Got unknown packet type\n");
+   }
+
+   return NULL;
 }
 
 // split a string into whitespace-separated parts
@@ -217,7 +296,7 @@ int main(int argc, char ** argv) {
          }
          add_history(line);
          int r = cmd->run(state, arg);
-         printf("%d\n", r);
+         if( r ) printf("Error: %d\n", r);
       } else {
          printf("Unknown command %s\n", line);
       }
