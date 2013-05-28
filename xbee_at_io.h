@@ -22,3 +22,5 @@
 //  io voltage supply (AT%V)
 //  io voltage monitoring (ATV+)
 //
+
+command ** io();
