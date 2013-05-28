@@ -62,7 +62,7 @@ int main(int argc, char ** argv) {
             output[2] = param & 0xFF;
             output[3] = 0;
          }
-         packet p = remote_at(addr, net, output);
+         p = remote_at(addr, net, output);
          write(ser, p.data, p.sz);
          printf("Remote AT packet sent: %s\n", data);
          for( i=0; i<p.sz; i++ ) printf("%02X ", p.data[i]);
