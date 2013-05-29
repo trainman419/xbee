@@ -52,7 +52,8 @@ class api_remote_frame : public api_frame {
 class xbsh_state {
    private:
       // serial port
-     serial::Serial serial;
+      serial::Serial serial;
+      std::vector<uint8_t> partial;
       
       // remote addresses
       std::list<xbee_addr> remotes;

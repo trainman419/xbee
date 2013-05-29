@@ -59,7 +59,7 @@
 
 xbsh_state::xbsh_state(std::string port, int baud ) :
   // TODO: spend more time choosing timeouts
-  serial(port, baud, serial::Timeout(1000, 1000, 0))
+  serial(port, baud, serial::Timeout(100, 1000, 0))
 {
 }
 
@@ -94,7 +94,7 @@ api_frame * xbsh_state::read_AT() {
    std::vector<uint8_t> data;
    serial.read(data, 64);
 
-   if( data[0] == 0x7E ) {
+   if( data.size() > 3 && data[0] == 0x7E ) {
       int len = data[2] | (data[1] << 8);
       if( len + 4 == data.size() ) {
          uint8_t checksum = data[3 + len];
@@ -159,6 +159,8 @@ api_frame * xbsh_state::read_AT() {
          } else {
             printf("Checksum failed\n");
          }
+      } else {
+         printf("Packet length mismatch\n");
       }
    } else {
       // unknown packet type
