@@ -80,15 +80,25 @@ class at_cmd_enum : public at_cmd_rw {
       }
 
       virtual std::list<std::string> get_completions(std::string prefix) {
-        printf("at_cmd_enum get_completions called with \"%s\"\n",
-            prefix.c_str());
          return keys.get_keys(prefix);
       }
 };
 
-command ** io_config() {
-   command ** result = new command*[17];
+
+command ** io_voltage() {
+   command ** result = new command*[3];
    command ** r = result;
+   *r++ = new command_child( "supply",     fake_cmd);
+   *r++ = new command_child( "monitoring", fake_cmd);
+   *r++ = 0;
+   return result;
+};
+
+command ** io() {
+   command ** result = new command*[23];
+   command ** r = result;
+   *r++ = new command_parent( "voltage",   io_voltage());
+
    *r++ = new command_child( "pull-up", fake_cmd);
    *r++ = new command_child( "PWM0",    fake_cmd);
 
@@ -105,50 +115,67 @@ command ** io_config() {
          3, "digital-in",
          4, "off",
          5, "on");
-   *r++ = new command_child( "DIO00",    dio0);
-   *r++ = new command_child( "DIO01",    dio1);
-   *r++ = new command_child( "DIO02",    fake_cmd);
-   *r++ = new command_child( "DIO03",    fake_cmd);
-   *r++ = new command_child( "DIO04",    fake_cmd);
-   *r++ = new command_child( "DIO05",    new at_cmd_enum("D5", 5,
+   at_cmd * dio2 = new at_cmd_enum("D2", 5,
          0, "disabled",
-         1, "associate",
+         2, "analog-in",
          3, "digital-in",
          4, "off",
-         5, "on")
-       );
+         5, "on");
+   at_cmd * dio3 = new at_cmd_enum("D3", 5,
+         0, "disabled",
+         2, "analog-in",
+         3, "digital-in",
+         4, "off",
+         5, "on");
+
+   // Digital commands
+   *r++ = new command_child( "D00",    dio0);
+   *r++ = new command_child( "D01",    dio1);
+   *r++ = new command_child( "D02",    dio2);
+   *r++ = new command_child( "D03",    dio3);
+
+   *r++ = new command_child( "D04",    new at_cmd_enum("D4", 4,
+            0, "disabled",
+            3, "digital-in",
+            4, "off",
+            5, "on"));
+   *r++ = new command_child( "D05",    new at_cmd_enum("D5", 5,
+            0, "disabled",
+            1, "associate",
+            3, "digital-in",
+            4, "off",
+            5, "on"));
+
    // DIO6-7 are serial
-   *r++ = new command_child( "DIO08",    fake_cmd);
+   *r++ = new command_child( "D08",    new at_cmd_enum("D8", 4,
+            0, "disabled",
+            3, "digital-in",
+            4, "off",
+            5, "on"));
    // DIO9-10 are serial
-   *r++ = new command_child( "DIO11",    fake_cmd);
-   *r++ = new command_child( "DIO12",    fake_cmd);
-   *r++ = new command_child( "DIO13",    fake_cmd);
+   *r++ = new command_child( "D11",    new at_cmd_enum("P1", 4,
+            0, "disabled",
+            3, "digital-in",
+            4, "off",
+            5, "on"));
+   *r++ = new command_child( "D12",    new at_cmd_enum("P2", 4,
+            0, "disabled",
+            3, "digital-in",
+            4, "off",
+            5, "on"));
+   *r++ = new command_child( "D13",    new at_cmd_enum("P3", 4,
+            0, "disabled",
+            3, "digital-in",
+            4, "off",
+            5, "on"));
 
    // A2D
    *r++ = new command_child( "AD0",      dio0);
    *r++ = new command_child( "AD1",      dio1);
-   *r++ = new command_child( "AD2",      fake_cmd);
-   *r++ = new command_child( "AD3",      fake_cmd);
-   
-   *r++ = 0;
-   return result;
-}
+   *r++ = new command_child( "AD2",      dio2);
+   *r++ = new command_child( "AD3",      dio3);
 
-command ** io_voltage() {
-   command ** result = new command*[3];
-   command ** r = result;
-   *r++ = new command_child( "supply",     fake_cmd);
-   *r++ = new command_child( "monitoring", fake_cmd);
-   *r++ = 0;
-   return result;
-};
-
-command ** io() {
-   command ** result = new command*[8];
-   command ** r = result;
-   *r++ = new command_parent( "config",    io_config());
-   *r++ = new command_parent( "voltage",   io_voltage());
-
+   // other configurataion options
    *r++ = new command_child( "sample-rate",      fake_cmd);
    *r++ = new command_child( "change-detection", fake_cmd);
    *r++ = new command_child( "led-blink-time",   fake_cmd);
