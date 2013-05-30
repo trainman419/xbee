@@ -63,6 +63,8 @@ class command_child : public command {
       command_child(std::string n, at_cmd * c) : command(n, "child"), cmd(c) {}
 
       virtual int run(xbsh_state * state, std::string args);
+
+      virtual std::list<std::string> get_completions(std::string prefix);
 };
 
 extern at_cmd * fake_cmd;

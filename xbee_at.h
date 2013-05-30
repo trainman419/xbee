@@ -52,6 +52,10 @@ class at_cmd;
 class at_cmd {
    public:
       virtual int run(xbsh_state * state, std::string arg) = 0; 
+
+      virtual std::list<std::string> get_completions(std::string prefix) {
+         return std::list<std::string>();
+      }
 };
 
 class at_cmd_ro : public at_cmd {

@@ -57,13 +57,32 @@ class at_cmd_enum : public at_cmd_rw {
       virtual int write(xbsh_state * state, std::string arg) {
          int * n = keys.get(arg);
          if( n ) {
-            printf("Send value %d\n", *n);
-            printf("Unimplemented\n");
-            return 2;
+            char val[1];
+            val[0] = *n;
+            state->send_AT(cmd, val, 1);
+            api_frame * ret = state->read_AT();
+            if( ret ) {
+               if( ret->get_status() == 0 ) {
+                  printf("Success: %s\n", values[*n].c_str());
+                  return 0;
+               } else {
+                  printf("Error: %d\n", ret->get_status());
+                  return 2;
+               }
+            } else {
+               printf("Error: didn't get confirmation\n");
+               return 2;
+            }
          } else {
             printf("Bad value %s\n", arg.c_str());
             return 1;
          }
+      }
+
+      virtual std::list<std::string> get_completions(std::string prefix) {
+        printf("at_cmd_enum get_completions called with \"%s\"\n",
+            prefix.c_str());
+         return keys.get_keys(prefix);
       }
 };
 
@@ -91,7 +110,13 @@ command ** io_config() {
    *r++ = new command_child( "DIO02",    fake_cmd);
    *r++ = new command_child( "DIO03",    fake_cmd);
    *r++ = new command_child( "DIO04",    fake_cmd);
-   *r++ = new command_child( "DIO05",    fake_cmd);
+   *r++ = new command_child( "DIO05",    new at_cmd_enum("D5", 5,
+         0, "disabled",
+         1, "associate",
+         3, "digital-in",
+         4, "off",
+         5, "on")
+       );
    // DIO6-7 are serial
    *r++ = new command_child( "DIO08",    fake_cmd);
    // DIO9-10 are serial

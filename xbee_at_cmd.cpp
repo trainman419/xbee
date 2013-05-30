@@ -99,6 +99,14 @@ int command_child::run(xbsh_state * state, std::string args) {
    return cmd->run(state, args.c_str());
 }
 
+std::list<std::string> command_child::get_completions(std::string prefix) {
+   if(cmd) {
+      return cmd->get_completions(prefix);
+   } else {
+      return std::list<std::string>();
+   }
+}
+
 command * serial_api[] = {
    new command_child( "escape",  fake_cmd),
    new command_child( "options", fake_cmd),
