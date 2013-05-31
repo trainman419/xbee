@@ -2,6 +2,7 @@
 #include <termios.h>
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "xbee_api.h"
 

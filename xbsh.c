@@ -8,9 +8,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 #include <readline/readline.h>
 
 /* serial port stuff */
+#include <unistd.h>
 #include <fcntl.h>
 #include <termios.h>
 
@@ -31,7 +34,7 @@ int main(int argc, char ** argv) {
 
    char * data = 0;
 
-   unsigned char * input = (char*)malloc(64); /* input buffer */
+   unsigned char * input = (unsigned char*)malloc(64); /* input buffer */
    int in_sz = 0;
    packet p;
    xbee_addr addr;

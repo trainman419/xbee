@@ -4,6 +4,7 @@
  */
 #include <stdio.h>
 
+#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include "xbee_api.h"
@@ -21,7 +22,7 @@ packet build_packet(int sz, char * data) {
    
    packet res;
    res.sz = sz + escapes + OVERHEAD;
-   res.data = (char*)malloc(res.sz);
+   res.data = (unsigned char*)malloc(res.sz);
 
    /* TODO: escape size bytes and checksum */
    res.data[0] = 0x7E;
@@ -109,7 +110,7 @@ packet remote_at(xbee_addr addr, xbee_net net, char * data) {
    static char cnt = 0;
    cnt++;
 
-   unsigned char * buf = (unsigned char *)malloc(sz);
+   char * buf = (char *)malloc(sz);
 
    /* API Identifier */
    buf[0] = API_REMOTE_AT;
