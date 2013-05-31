@@ -88,8 +88,13 @@ int command_parent::run(xbsh_state * state, std::string args) {
       for( unsigned long i = 0; i<l; i++ ) {
          pad += " ";
       }
-      std::string help = subcommands.get(s)->get_help();
-      printf("   %s:%s%s\n", s.c_str(), pad.c_str(), help.c_str());
+      command * c = subcommands.get(s);
+      if( c ) {
+         std::string help = c->get_help();
+         printf("   %s:%s%s\n", s.c_str(), pad.c_str(), help.c_str());
+      } else {
+         printf("Error: couldn't find subcommand %s\n", s.c_str());
+      }
    }
    printf("\n");
    return 0;
