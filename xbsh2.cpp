@@ -153,7 +153,7 @@ api_frame * xbsh_state::read_AT() {
                          source, net, d);
                   }
                default:
-                  printf("Unknown response type\n");
+                  printf("Unknown response type%d\n", type);
                   break;
             }
          } else {
