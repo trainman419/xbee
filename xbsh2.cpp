@@ -192,6 +192,7 @@ command * commands;
 
 // get tab-completions
 char ** xbsh_attempt_completion_func(const char * text, int start, int end) {
+
    std::list<std::string> p = parts(std::string(rl_line_buffer, 
             rl_line_buffer+start));
 
@@ -212,10 +213,9 @@ char ** xbsh_attempt_completion_func(const char * text, int start, int end) {
          char ** result = (char**)malloc(sizeof(char*) * 2);
          std::string comp = completions.front();
          int len = comp.length();
-         result[0] = (char*)malloc(sizeof(char)*(len+2));
+         result[0] = (char*)malloc(sizeof(char)*(len+1));
          memcpy(result[0], comp.c_str(), len);
-         result[0][len] = ' ';
-         result[0][len+1] = 0;
+         result[0][len] = 0;
 
          result[1] = 0;
          return result;
