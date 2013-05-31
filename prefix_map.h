@@ -22,8 +22,50 @@ template <class T> class prefix_map {
          int depth = 0;
          prefix_node * t = map;
          while(t) {
+            //printf("%d: %c\n", depth, t->prefix);
             if(t->prefix == prefix[depth]) {
-               if(t->leaf) {
+               if( depth+1 == prefix.length() ) {
+                  if(t->child) {
+                     prefix_obj * o = t->child;
+                     if( prefix.length() <= o->name.length() ) {
+                        return o->obj;
+                     }
+                  } else {
+                     //printf("no child at prefix depth\n");
+                     return NULL;
+                  }
+               } else if( depth+1 > prefix.length() ) {
+                  // we ran out of prefix before tree traversal was done
+                  //  this implies multiple matches
+                  // TODO: return a better error message
+                  //printf("prefix exhausted\n");
+                  return NULL;
+               } else {
+                  if( t->children ) {
+                     t = t->children;
+                     depth++;
+                  } else if( t->child ) {
+                     // we've hit a leaf without hitting the end of our prefix
+                     prefix_obj * o = t->child;
+                     // check that our prefix is long enough
+                     if( prefix.length() <= o->name.length() ) {
+                        // check that our prefix matches
+                        if( o->name.substr(0, prefix.length()) == prefix ) {
+                           return o->obj;
+                        }
+                     }
+                     // no prefix match; done
+                     //printf("no prefix match\n");
+                     return NULL;
+                  } else {
+                     //printf("no children and no child?\n");
+                     return NULL;
+                  }
+               }
+               /*
+               // TODO: rework for new partial/full prefix overlap
+               //  maybe invert prefix-length/depth check and child check
+               if(t->child) {
                   // we found a leaf node that matches
                   prefix_obj * o = t->child;
 
@@ -39,7 +81,8 @@ template <class T> class prefix_map {
                   } else {
                      return NULL;
                   }
-               } else {
+               }
+               if(t->children) {
                   t = t->children;
                   depth++;
                   if( depth >= prefix.length() ) {
@@ -49,10 +92,12 @@ template <class T> class prefix_map {
                      return NULL;
                   }
                }
+               */
             } else {
                t = t->next;
             }
          }
+         //printf("fall-through\n");
          return NULL;
       }
 
@@ -64,27 +109,46 @@ template <class T> class prefix_map {
             prefix_node * n = map;
             prefix_node * prev = map;
             while(n) {
+               //printf("%d: %c\n", depth, id[depth]);
                if( id[depth] == n->prefix ) {
-                  if(n->leaf) {
+                  // TODO: rework this for new full/partial prefix overlap
+                  if(n->children) {
+                     n = n->children;
+                     depth++;
+                  } else {
                      prefix_obj * obj2 = n->child;
-                     n->leaf = 0;
+                     n->child = NULL;
                      // determine depth
                      int i = 0;
                      for( ; i < obj->name.length() && 
                            i < obj2->name.length() && 
                            obj->name[i] == obj2->name[i]; i++ );
 
-                     for( depth++; depth < i; depth++ ) {
-                        n->children = new prefix_node(id[depth], NULL);
-                        n = n->children;
+                     //printf("m: %d (%s <> %s)\n", i, obj->name.c_str(), obj2->name.c_str());
+
+                     if( i == id.length() ) {
+                        n->child = obj;
+                        //printf("prefix\n");
+                        if( obj2->name.length() > i ) {
+                           //printf("move child\n");
+                           n->children = new prefix_node(obj2->name[i], obj2);
+                        }
+                        return;
+                     } else {
+                        for( depth++; depth < i; depth++ ) {
+                           //printf("+%d: %c\n", depth, id[depth]);
+                           n->children = new prefix_node(id[depth]);
+                           n = n->children;
+                        }
+                        n->children = new prefix_node(id[depth], obj);
+                        if( i == obj2->name.length() ) {
+                           n->child = obj2;
+                        } else {
+                           n = n->children;
+                           n->next = new prefix_node(obj2->name[depth], obj2);
+                        }
+                        return;
                      }
-                     n->children = new prefix_node(id[depth], obj);
-                     n = n->children;
-                     n->next = new prefix_node(obj2->name[depth], obj2);
-                     return;
-                  } else {
-                     n = n->children;
-                     depth++;
                   }
                } else {
                   prev = n;
@@ -105,7 +169,7 @@ template <class T> class prefix_map {
          // recurse down to our prefix
          while(n && depth < prefix.length() ) {
             if(n->prefix == prefix[depth]) {
-               if(n->leaf) {
+               if(n->child) {
                   // we found a leaf node that matches
                   prefix_obj * o = n->child;
 
@@ -116,8 +180,13 @@ template <class T> class prefix_map {
                         result.push_back(n->child->name);
                      }
                   }
-                  return result;
-               } else {
+                  if(n->children) {
+                     n = n->children;
+                     depth++;
+                  } else {
+                     return result;
+                  }
+               } else if(n->children) {
                   n = n->children;
                   depth++;
                }
@@ -133,9 +202,10 @@ template <class T> class prefix_map {
          while(!nodes.empty()) {
             n = nodes.front();
             nodes.pop();
-            if(n->leaf) {
+            if(n->child) {
                result.push_back(n->child->name);
-            } else {
+            }
+            if(n->children) {
                nodes.push(n->children);
             }
             if(n->next) {
@@ -157,15 +227,18 @@ template <class T> class prefix_map {
       class prefix_node {
          public:
             prefix_node(char c, prefix_obj * o) : prefix(c), child(o), 
-               leaf(o?1:0), next(NULL) {}
+               children(NULL), next(NULL) {}
+
+            prefix_node(char c, prefix_node * cl) : prefix(c), children(cl),
+               child(NULL), next(NULL) {}
+
+            prefix_node(char c) : prefix(c), child(NULL), children(NULL),
+               next(NULL) {}
 
             prefix_node * next;
             char prefix;
-            union {
-               prefix_node * children;
-               prefix_obj * child;
-            };
-            int leaf;
+            prefix_node * children;
+            prefix_obj * child;
       };
 
       prefix_node * map;
