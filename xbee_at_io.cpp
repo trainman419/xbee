@@ -129,17 +129,17 @@ command ** io() {
          5, "on");
 
    // Digital commands
-   *r++ = new command_child( "D00",    dio0);
-   *r++ = new command_child( "D01",    dio1);
-   *r++ = new command_child( "D02",    dio2);
-   *r++ = new command_child( "D03",    dio3);
+   *r++ = new command_child( "D0",    dio0);
+   *r++ = new command_child( "D1",    dio1);
+   *r++ = new command_child( "D2",    dio2);
+   *r++ = new command_child( "D3",    dio3);
 
-   *r++ = new command_child( "D04",    new at_cmd_enum("D4", 4,
+   *r++ = new command_child( "D4",    new at_cmd_enum("D4", 4,
             0, "disabled",
             3, "digital-in",
             4, "off",
             5, "on"));
-   *r++ = new command_child( "D05",    new at_cmd_enum("D5", 5,
+   *r++ = new command_child( "D5",    new at_cmd_enum("D5", 5,
             0, "disabled",
             1, "associate",
             3, "digital-in",
@@ -147,7 +147,7 @@ command ** io() {
             5, "on"));
 
    // DIO6-7 are serial
-   *r++ = new command_child( "D08",    new at_cmd_enum("D8", 4,
+   *r++ = new command_child( "D8",    new at_cmd_enum("D8", 4,
             0, "disabled",
             3, "digital-in",
             4, "off",
