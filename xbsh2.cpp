@@ -18,6 +18,7 @@
 #include <readline/history.h>
 
 #include <boost/foreach.hpp>
+#include <boost/thread.hpp>
 
 #include "xbee_api.h"
 #include "prefix_map.h"
@@ -243,6 +244,8 @@ char ** xbsh_attempt_completion_func(const char * text, int start, int end) {
       return NULL;
    }
 }
+
+
 
 int main(int argc, char ** argv) { 
    // initialize readline
