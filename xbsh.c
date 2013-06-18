@@ -136,7 +136,8 @@ int serial_open(char * device) {
    bzero(&newtio, sizeof(struct termios)); // zero new port settings
    // set up new port 
    // see http://tldp.org/HOWTO/Serial-Programming-HOWTO/x115.html)
-   newtio.c_cflag = B115200 | CS8 | CREAD | CLOCAL;
+   //newtio.c_cflag = B115200 | CS8 | CREAD | CLOCAL;
+   newtio.c_cflag = B9600 | CS8 | CREAD | CLOCAL;
    newtio.c_iflag = IGNBRK;
    newtio.c_oflag = 0; // raw output
    newtio.c_lflag = 0; // raw input

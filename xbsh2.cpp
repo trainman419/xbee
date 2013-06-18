@@ -59,9 +59,15 @@
 //
 
 xbsh_state::xbsh_state(std::string port, int baud ) :
-  // TODO: spend more time choosing timeouts
-  serial(port, baud, serial::Timeout(100, 1000, 0))
+   serial(port, baud, serial::Timeout(100, 1000, 0)),
+   read_thread_done(false),
+   read_thread(boost::ref(*this))
 {
+}
+
+xbsh_state::~xbsh_state() {
+   read_thread_done = true;
+   read_thread.join();
 }
 
 void xbsh_state::send_packet(packet p) {
@@ -91,83 +97,125 @@ void xbsh_state::send_AT(std::string at_str, char * data, int data_len) {
    free(d);
 }
 
-api_frame * xbsh_state::read_AT() {
+void xbsh_state::operator()() {
    std::vector<uint8_t> data;
-   serial.read(data, 64);
 
-   if( data.size() > 3 && data[0] == 0x7E ) {
-      int len = data[2] | (data[1] << 8);
-      if( len + 4 == data.size() ) {
-         uint8_t checksum = data[3 + len];
-         uint8_t sum = 0;
-         for( int i=0; i<len; ++i ) {
-            sum += data[3+i];
-         }
-         sum = 0xFF - sum;
-         if( sum == checksum ) {
-            uint8_t type = data[3];
-            uint8_t id = data[4];
-            switch(type) {
-               case API_AT_RESP:
-                  {
-                     if( len < 5 ) {
-                        printf("Packet too short\n");
-                        return NULL;
+   while(!read_thread_done) {
+      // temporary buffer for incoming data
+      std::vector<uint8_t> tmp_data;
+      serial.read(tmp_data, 64);
+      if( tmp_data.size() > 0 ) {
+         printf("Serial receive got %zd bytes\n", tmp_data.size());
+      }
+
+      // append tmp_data to data
+      data.insert(data.end(), tmp_data.begin(), tmp_data.end());
+
+      // TODO: eat any starting garbage bytes
+
+      if( data.size() > 3 && data[0] == 0x7E ) {
+         int len = data[2] | (data[1] << 8);
+         // TODO: only consume the first len bytes, or wait for more if the
+         //  buffer has less than len bytes
+         if( len + 4 <= data.size() ) {
+            //std::vector<uint8_t> packet_data(
+            uint8_t checksum = data[3 + len];
+            uint8_t sum = 0;
+            for( int i=0; i<len; ++i ) {
+               sum += data[3+i];
+            }
+            sum = 0xFF - sum;
+            if( sum == checksum ) {
+               uint8_t type = data[3];
+               uint8_t id = data[4];
+               switch(type) {
+                  case API_AT_RESP:
+                     {
+                        if( len < 5 ) {
+                           printf("API response too short: %d\n", len);
+                           // TODO: ?
+                        } else {
+                           std::string command;
+                           command.push_back(data[5]);
+                           command.push_back(data[6]);
+                           uint8_t status = data[7];
+                           std::vector<uint8_t> d(len - 5);
+                           for( int i=0; i<len-5; i++ ) {
+                              d[i] = data[i+8];
+                           }
+                           // TODO: lock output array and append
+                           api_frame * f = new api_frame(type, id, status, 
+                                 command, d);
+                           boost::mutex::scoped_lock lock(received_frames_mutex);
+                           received_frames.push_back(f);
+                        }
                      }
-                     std::string command;
-                     command.push_back(data[5]);
-                     command.push_back(data[6]);
-                     uint8_t status = data[7];
-                     std::vector<uint8_t> d(len - 5);
-                     for( int i=0; i<len-5; i++ ) {
-                        d[i] = data[i+8];
+                     break;
+                  case API_REMOTE_AT_RESP:
+                     {
+                        if( len < 15 ) {
+                           printf("Remote API response too short: %d\n", len);
+                           // TODO: ?
+                        } else {
+                           xbee_addr source;
+                           source.c_addr[0] = data[12];
+                           source.c_addr[1] = data[11];
+                           source.c_addr[2] = data[10];
+                           source.c_addr[3] = data[9];
+                           source.c_addr[4] = data[8];
+                           source.c_addr[5] = data[7];
+                           source.c_addr[6] = data[6];
+                           source.c_addr[7] = data[5];
+                           xbee_net net;
+                           net.c_net[0] = data[14];
+                           net.c_net[1] = data[13];
+                           std::string command;
+                           command.push_back(data[15]);
+                           command.push_back(data[16]);
+                           uint8_t status = data[17];
+                           std::vector<uint8_t> d(len - 15);
+                           for( int i=0; i<len-15; i++ ) {
+                              d[i] = data[i+18];
+                           }
+                           // TODO: lock output array and append
+                           api_frame * f = new api_remote_frame(type, id,
+                                 status, command, source, net, d);
+                           boost::mutex::scoped_lock lock(received_frames_mutex);
+                           received_frames.push_back(f);
+                        }
                      }
-                     return new api_frame(type, id, status, command, d);
-                  }
-               case API_REMOTE_AT_RESP:
-                  {
-                     if( len < 15 ) {
-                        printf("Packet too short\n");
-                        return NULL;
-                     }
-                     xbee_addr source;
-                     source.c_addr[0] = data[12];
-                     source.c_addr[1] = data[11];
-                     source.c_addr[2] = data[10];
-                     source.c_addr[3] = data[9];
-                     source.c_addr[4] = data[8];
-                     source.c_addr[5] = data[7];
-                     source.c_addr[6] = data[6];
-                     source.c_addr[7] = data[5];
-                     xbee_net net;
-                     net.c_net[0] = data[14];
-                     net.c_net[1] = data[13];
-                     std::string command;
-                     command.push_back(data[15]);
-                     command.push_back(data[16]);
-                     uint8_t status = data[17];
-                     std::vector<uint8_t> d(len - 15);
-                     for( int i=0; i<len-15; i++ ) {
-                        d[i] = data[i+18];
-                     }
-                     return new api_remote_frame(type, id, status, command,
-                         source, net, d);
-                  }
-               default:
-                  printf("Unknown response type%d\n", type);
-                  break;
+                     break;
+                  default:
+                     printf("Unknown response type %X\n", type);
+                     break;
+               }
+               // eat len+4 bytes off the front of our incoming buffer
+               data.erase(data.begin(), data.begin()+len+4);
+            } else {
+               printf("Checksum failed\n");
+               // TODO: eat until next start byte
             }
          } else {
-            printf("Checksum failed\n");
+            printf("Packet length mismatch\n");
+            // TODO: eat until next start byte
          }
       } else {
-         printf("Packet length mismatch\n");
+         // unknown packet type
+         if( data.size() > 3 ) {
+            printf("Got unknown packet type: %X\n", data[0]);
+         }
       }
-   } else {
-      // unknown packet type
-      printf("Got unknown packet type\n");
    }
+}
 
+api_frame * xbsh_state::read_AT() {
+   sleep(1);
+   boost::mutex::scoped_lock lock(received_frames_mutex);
+   if( received_frames.size() > 0 ) {
+      api_frame * res = received_frames.front();
+      received_frames.pop_front();
+      return res;
+   }
    return NULL;
 }
 

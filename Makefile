@@ -1,6 +1,6 @@
 CFLAGS=-g
 CXXFLAGS=-g
-LDLIBS=-lreadline -lserial
+LDLIBS=-lreadline -lserial -lboost_thread
 LINK.o=$(CXX)
 
 TARGETS=xbsh sign xbsh2 prefix_map_test

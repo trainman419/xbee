@@ -12,6 +12,8 @@
 
 #include <serial/serial.h>
 
+#include <boost/thread.hpp>
+
 #include <string>
 #include <list>
 #include <stdint.h>
@@ -57,9 +59,19 @@ class xbsh_state {
       
       // remote addresses
       std::list<xbee_addr> remotes;
+
+      bool read_thread_done;
+      boost::thread read_thread;
+
+      std::list<api_frame*> received_frames;
+      boost::mutex received_frames_mutex;
       
    public:
       xbsh_state(std::string port, int baud = 9600);
+      ~xbsh_state();
+
+      // our read thread
+      void operator()();
 
       // send and receive packets
       packet read_packet();
