@@ -136,6 +136,43 @@ class at_cmd_status : public at_cmd_ro {
       }
 };
 
+std::list<std::string> at_cmd_debug::get_completions(std::string prefix) {
+   std::list<std::string> res;
+   if( prefix == "" || prefix == "o" ) {
+      res.push_back("on");
+      res.push_back("off");
+   } else if( prefix == "on" ) {
+      res.push_back("on");
+   } else if( prefix == "of" || prefix == "off" ) {
+      res.push_back("off");
+   }
+   return res;
+}
+
+int at_cmd_debug::read(xbsh_state * state) {
+   if( state->debug ) {
+      printf("debugging on\n");
+   } else {
+      printf("debugging off\n");
+   }
+   return 0;
+}
+
+int at_cmd_debug::write(xbsh_state * state, std::string arg) {
+   if( arg == "on" ) {
+      state->debug = 1;
+      printf("debuging on\n");
+      return 0;
+   } else if( arg == "off" ) {
+      state->debug = 0;
+      printf("debugging off\n");
+      return 0;
+   } else {
+      printf("Unreconized debugging option: %s\n", arg.c_str());
+      return 1;
+   }
+}
+
 command ** diag() {
    command ** r = new command*[4];
    r[0] = new command_child( "fw-version",       new at_cmd_ro_hex("VR",

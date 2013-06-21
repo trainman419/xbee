@@ -5,7 +5,6 @@
 #include <stdio.h>
 
 #include <unistd.h>
-#include <string.h>
 #include <stdlib.h>
 #include "xbee_api.h"
 
@@ -58,8 +57,7 @@ int count_escapes(int sz, char * data) {
    return cnt;
 }
 
-packet wrap1(char type, char * data) {
-   int sz = strlen(data);
+packet wrap1(char type, char * data, int sz) {
    int i;
 
    char * tmp = malloc(sz + 1);
@@ -77,10 +75,9 @@ packet wrap1(char type, char * data) {
    return res;
 }
 
-packet at(char * data) {
+packet at(char * data, int sz) {
    static char cnt = 0;
    cnt++;
-   int sz = strlen(data);
    int i;
 
    char * tmp = malloc(sz + 2);
@@ -99,14 +96,14 @@ packet at(char * data) {
    return res;
 }
 
-packet at_queue(char * data) {
-   return wrap1(API_AT_QUEUE, data);
+packet at_queue(char * data, int data_sz) {
+   return wrap1(API_AT_QUEUE, data, data_sz);
 }
 
-packet remote_at(xbee_addr addr, xbee_net net, char * data) {
+packet remote_at(xbee_addr addr, xbee_net net, char * data, int data_sz) {
    packet res;
    int i;
-   int sz = 1 + 1 + 8 + 2 + 1 + strlen(data);
+   int sz = 1 + 1 + 8 + 2 + 1 + data_sz;
    static char cnt = 0;
    cnt++;
 
@@ -125,7 +122,7 @@ packet remote_at(xbee_addr addr, xbee_net net, char * data) {
    buf[12] = 0x02; /* TODO: make this modifiable; currently, just apply 
                       immediately */
 
-   for( i = 0; i < strlen(data); i++ ) buf[i+13] = data[i];
+   for( i = 0; i < data_sz; i++ ) buf[i+13] = data[i];
 
    res = build_packet(sz, buf);
 

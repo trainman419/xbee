@@ -83,6 +83,15 @@ class at_cmd_wo : public at_cmd {
       virtual int write(xbsh_state * state, std::string arg) = 0;
 };
 
+class at_cmd_debug : public at_cmd_rw {
+   public:
+      virtual std::list<std::string> get_completions(std::string prefix);
+
+   protected:
+      virtual int read(xbsh_state * state);
+      virtual int write(xbsh_state * state, std::string arg);
+};
+
 command ** diag();
 command ** at_c();
 command ** reset_c();

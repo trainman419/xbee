@@ -51,11 +51,12 @@ int main(int argc, char ** argv) {
       data = readline("xbsh> ");
       /* AT command */
       if( data && strncmp( data, "AT", 2) == 0 ) {
-         p = at(data + 2);
+         p = at(data + 2, 2);
          write(ser, p.data, p.sz);
       }
       if( data && data[0] == 'r' ) {
          char * output = data + 1;
+         int output_sz = 2;
          if( strlen(data) > 3 ) {
             int param;
             output = malloc(strlen(data));
@@ -63,9 +64,9 @@ int main(int argc, char ** argv) {
             output[1] = data[2];
             sscanf(data + 3, "%d", &param);
             output[2] = param & 0xFF;
-            output[3] = 0;
+            output_sz = 3;
          }
-         p = remote_at(addr, net, output);
+         p = remote_at(addr, net, output, output_sz);
          write(ser, p.data, p.sz);
          printf("Remote AT packet sent: %s\n", data);
          for( i=0; i<p.sz; i++ ) printf("%02X ", p.data[i]);

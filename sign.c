@@ -43,7 +43,9 @@ int main(int argc, char ** argv) {
 
    if( ser < 0 ) return -1;
 
+   int d0_sz = 2;
    char d0[] = {'D', '0', 0, 0};
+   int d1_sz = 2;
    char d1[] = {'D', '1', 0, 0};
 
    /* interpret CLI options */
@@ -51,14 +53,20 @@ int main(int argc, char ** argv) {
    for( i=1; i < argc; i++ ) {
       char * arg = argv[i];
       if( strcmp("-man", arg) == 0 ) {
+         d0_sz = 3;
+         d1_sz = 3;
          d0[2] = 4;
          d1[2] = 4;
       }
       if( strcmp("-hand", arg) == 0 ) {
+         d0_sz = 3;
+         d1_sz = 3;
          d0[2] = 5;
          d1[2] = 5;
       }
       if( strcmp("-off", arg) == 0 ) {
+         d0_sz = 3;
+         d1_sz = 3;
          d0[2] = 4;
          d1[2] = 5;
       }
@@ -71,7 +79,7 @@ int main(int argc, char ** argv) {
    unsigned char result[2] = { 0, 0};
 
    p.sz = 0;
-   out = remote_at(addr, net, d0);
+   out = remote_at(addr, net, d0, d0_sz);
    while( p.sz == 0 && retry < TRIES ) {
       cnt = write(ser, out.data, out.sz);
       if( cnt != out.sz ) {
@@ -88,7 +96,7 @@ int main(int argc, char ** argv) {
 
    retry = 0;
    p.sz = 0;
-   out = remote_at(addr, net, d1);
+   out = remote_at(addr, net, d1, d1_sz);
    while( p.sz == 0 && retry < TRIES ) {
       cnt = write(ser, out.data, out.sz);
       if( cnt != out.sz ) {

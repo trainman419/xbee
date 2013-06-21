@@ -79,11 +79,11 @@ packet tx_addr(xbee_addr addr, int sz, char * data);
 packet read_packet(int fd);
 
 /* AT */
-packet at(char * data);
-packet at_queue(char * data);
+packet at(char * data, int data_sz);
+packet at_queue(char * data, int data_sz);
 
 /* remote AT */
-packet remote_at(xbee_addr addr, xbee_net net, char * data);
+packet remote_at(xbee_addr addr, xbee_net net, char * data, int data_sz);
 /* not sure if there's a remote AT queue; skipping for now */
 
 #ifdef __cplusplus

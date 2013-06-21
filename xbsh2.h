@@ -34,8 +34,10 @@ class api_frame {
       uint8_t get_type() { return type; }
       uint8_t get_id() { return id; }
       uint8_t get_status() { return status; }
-      std::string get_command();
+      std::string get_command() { return command; }
       std::vector<uint8_t> get_data() { return data; }
+
+      virtual std::string to_string();
 };
 
 class api_remote_frame : public api_frame {
@@ -49,6 +51,8 @@ class api_remote_frame : public api_frame {
         api_frame(t, i, s, c, d), source(so), net(n) {}
       xbee_addr get_source() { return source; }
       xbee_net get_net() { return net; }
+
+      //virtual std::string to_string();
 };
 
 class xbsh_state {
@@ -87,6 +91,8 @@ class xbsh_state {
       void push_remote(xbee_addr remote);
       xbee_addr get_remote();
       void pop_remote();
+
+      int debug;
 };
 
 #endif

@@ -60,7 +60,7 @@
 
 xbsh_state::xbsh_state(std::string port, int baud ) :
    serial(port, baud, serial::Timeout(100, 1000, 0)),
-   read_thread_done(false),
+   read_thread_done(false), debug(0),
    read_thread(boost::ref(*this))
 {
 }
@@ -71,7 +71,13 @@ xbsh_state::~xbsh_state() {
 }
 
 void xbsh_state::send_packet(packet p) {
-   // TODO
+   if( debug ) {
+      printf("TX: ");
+      for( int i=0; i<p.sz; i++ ) {
+         printf("%02X ", p.data[i]);
+      }
+      printf("\n");
+   }
    serial.write(p.data, p.sz);
 }
 
@@ -80,18 +86,20 @@ void xbsh_state::send_AT(std::string at_str, char * data, int data_len) {
       fprintf(stderr, "Error: bad AT command: %s", at_str.c_str());
       return;
    }
-   char * d = (char*)malloc(at_str.length() + data_len);
+   int d_sz = data_len + at_str.length();
+   char * d = (char*)malloc(d_sz + 1);
    memcpy(d, at_str.c_str(), 2);
-   memcpy(d + 2, data, data_len);
+   memcpy(d + at_str.length(), data, data_len);
+   d[d_sz] = 0; // append a null
 
    packet p;
    if( remotes.size() == 0 ) {
-      p = at(d);
+      p = at(d, d_sz);
    } else {
       xbee_net net;
       net.c_net[0] = 0xFF;
       net.c_net[1] = 0xFE;
-      p = remote_at(remotes.back(), net, d);
+      p = remote_at(remotes.back(), net, d, d_sz);
    }
    send_packet(p);
    free(d);
@@ -105,7 +113,13 @@ void xbsh_state::operator()() {
       std::vector<uint8_t> tmp_data;
       serial.read(tmp_data, 64);
       if( tmp_data.size() > 0 ) {
-         printf("Serial receive got %zd bytes\n", tmp_data.size());
+         if( debug ) {
+            printf("RX: ");
+            for( int i=0; i<tmp_data.size(); i++ ) {
+               printf("%02X ", tmp_data[i]);
+            }
+            printf("\n");
+         }
       }
 
       // append tmp_data to data
@@ -218,6 +232,21 @@ api_frame * xbsh_state::read_AT() {
    }
    return NULL;
 }
+
+std::string api_frame::to_string() {
+   std::string res;
+   for( int i=0; i<data.size(); i++ ) {
+      char tmp[6];
+      sprintf(tmp, "%02X, ", data[i]);
+      res += std::string(tmp);
+   }
+   return res;
+}
+
+/*
+std::string api_remote_frame::to_string() {
+}
+*/
 
 // split a string into whitespace-separated parts
 std::list<std::string> parts(std::string line) {

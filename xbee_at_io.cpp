@@ -35,17 +35,43 @@ class at_cmd_enum : public at_cmd_rw {
          state->send_AT(cmd, 0, 0);
          api_frame * ret = state->read_AT();
          if( ret ) {
-            std::vector<uint8_t> data = ret->get_data();
-            if( data.size() == 1 ) {
-               if( values.count(data[0]) == 1 ) {
-                  printf("%s\n", values[data[0]].c_str());
-                  return 0;
+            if( ret->get_status() == 0 ) {
+               std::vector<uint8_t> data = ret->get_data();
+               if( data.size() == 1 ) {
+                  if( values.count(data[0]) == 1 ) {
+                     printf("%s\n", values[data[0]].c_str());
+                     return 0;
+                  } else {
+                     printf("Got Unknown result %d\n", data[0]);
+                     return 1;
+                  }
                } else {
-                  printf("Got Unknown result %d\n", data[0]);
+                  printf("Expected 1 byte; got %zd bytes\n", data.size());
                   return 1;
                }
             } else {
-               printf("Expected 1 byte; got %zd bytes\n", data.size());
+               std::string err;
+               switch(ret->get_status()) {
+                  case 0:
+                     err = "No Error??";
+                     break;
+                  case 1:
+                     err = "ERROR";
+                     break;
+                  case 2:
+                     err = "Invalid Command";
+                     break;
+                  case 3:
+                     err = "Invalid Parameter";
+                     break;
+                  case 4:
+                     err = "Tx Failure";
+                     break;
+                  default:
+                     err = "Unknown error";
+                     break;
+               }
+               printf("%s\n", err.c_str());
                return 1;
             }
          } else {
@@ -163,11 +189,13 @@ command ** io() {
             3, "digital-in",
             4, "off",
             5, "on"));
+   /*
    *r++ = new command_child( "D13",    new at_cmd_enum("P3", 4,
             0, "disabled",
             3, "digital-in",
             4, "off",
             5, "on"));
+            */
 
    // A2D
    *r++ = new command_child( "AD0",      dio0);

@@ -244,6 +244,7 @@ command * toplevel[] = {
    new command_child( "write",            fake_cmd ),
    new command_child( "defaults",         fake_cmd ),
    new command_child( "device-type",      fake_cmd ),
+   new command_child( "debug",  new at_cmd_debug() ),
 
    0
 };
