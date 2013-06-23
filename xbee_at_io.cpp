@@ -6,6 +6,8 @@
 #include <map>
 #include <string>
 
+#include <boost/foreach.hpp>
+
 #include <stdarg.h>
 
 class at_cmd_enum : public at_cmd_rw {
@@ -110,6 +112,171 @@ class at_cmd_enum : public at_cmd_rw {
       }
 };
 
+class at_cmd_flags : public at_cmd_rw {
+   // assumptions: all of the flag fields are continuous, starting at bit 0,
+   // and all are two bytes in size
+   private:
+      std::string cmd;
+      prefix_map<int> keys;
+      std::map<int, std::string> values;
+
+      // split a string on commas
+      std::list<std::string> split(std::string in) {
+         int start = 0;
+         std::list<std::string> res;
+         int i;
+         for( i=0; i<in.length(); i++ ) {
+            if( in[i] == ',' ) {
+               res.push_back(in.substr(start, i-start));
+               start = i+1;
+            }
+         }
+         if( start <= i ) {
+            res.push_back(in.substr(start, i-start));
+         }
+         return res;
+      }
+
+   public:
+      at_cmd_flags(std::string c, int n, ...) : cmd(c) {
+         va_list vl;
+         int idx = 1;
+         char * val;
+         va_start(vl, n);
+         for( int i=0; i<n; i++ ) {
+            val = va_arg(vl, char*);
+            values[idx] = val;
+            int * n = new int;
+            *n = idx;
+            keys.put(val, n);
+            idx <<= 1;
+         }
+         va_end(vl);
+      }
+
+      virtual int read(xbsh_state * state) {
+         state->send_AT(cmd, 0, 0);
+         api_frame * ret = state->read_AT();
+         if( ret ) {
+            std::string err;
+            switch( ret->get_status() ) {
+               case 0:
+                  {
+                     std::vector<uint8_t> data = ret->get_data();
+                     if( data.size() == 2 ) {
+                        int flags = data[0] << 8 | data[1];
+                        std::list<std::string> res;
+                        for( int i=1; i<0xFFFF; i <<= 1 ) {
+                           if( i & flags ) {
+                              res.push_back(values[i]);
+                           }
+                        }
+                        res.sort();
+                        std::string r;
+                        if( res.size() > 0 ) {
+                           r = res.front();
+                           res.pop_front();
+                        }
+                        BOOST_FOREACH(std::string p, res) {
+                           r += "," + p;
+                        }
+                        printf("%s\n", r.c_str());
+                     } else {
+                        printf("Expected 2 bytes, got %zd\n", data.size());
+                        return 3;
+                     }
+                  }
+                  break;
+               case 1:
+                  err = "ERROR";
+                  break;
+               case 2:
+                  err = "Invalid Command";
+                  break;
+               case 3:
+                  err = "Invalid Parameter";
+                  break;
+               case 4:
+                  err = "Tx Failure";
+                  break;
+               default:
+                  err = "Unknown error";
+                  break;
+            }
+            if( err.length() > 0 ) {
+               printf("%s\n", err.c_str());
+               return 2;
+            } else {
+               return 0;
+            }
+         } else {
+            printf("Didn't get a response for command AT%s\n", cmd.c_str());
+            return 1;
+         }
+      }
+
+      virtual int write(xbsh_state * state, std::string arg) {
+         std::list<std::string> parts = split(arg);
+         int flags = 0;
+         int err = 0;
+         BOOST_FOREACH(std::string part, parts) {
+            int * n = keys.get(part);
+            if( n ) {
+               flags |= *n;
+            } else {
+               printf("Unknown flag: %s\n", part.c_str());
+               err = 1;
+            }
+         }
+         if( err ) {
+            return 1;
+         }
+         char data[2];
+         data[0] = flags >> 8;
+         data[1] = flags;
+         state->send_AT(cmd, data, 2);
+         api_frame * ret = state->read_AT();
+         if( ret ) {
+            // TODO: better error checking
+            if( ret->get_status() == 0 ) {
+               printf("Success\n");
+               return 0;
+            } else {
+               printf("Error\n");
+               return 2;
+            }
+         } else {
+            printf("Didn't get a response\n");
+            return 1;
+         }
+      }
+
+      virtual std::list<std::string> get_completions(std::string prefix) {
+         // split on commas; feed last token into get_keys
+         std::list<std::string> parts = split(prefix);
+         std::string last;
+         if( parts.size() > 0 ) {
+            last = parts.back();
+            parts.pop_back();
+         }
+         std::list<std::string> completions = keys.get_keys(last);
+         std::string p;
+         BOOST_FOREACH(std::string part, parts) {
+            p += part + ",";
+            for( std::list<std::string>::iterator itr = completions.begin();
+                  itr != completions.end(); ++itr ) {
+               while( *itr == part ) {
+                  itr = completions.erase(itr);
+               }
+            }
+         }
+         std::list<std::string> res;
+         BOOST_FOREACH(std::string comp, completions) {
+            res.push_back(p + comp);
+         }
+         return res;
+      }
+};
 
 command ** io_voltage() {
    command ** result = new command*[3];
@@ -125,7 +292,9 @@ command ** io() {
    command ** r = result;
    *r++ = new command_parent( "voltage",   io_voltage());
 
-   *r++ = new command_child( "pull-up", fake_cmd);
+   *r++ = new command_child( "pull-up", new at_cmd_flags("PR",14,
+            "D4", "D3", "D2", "D1", "D0", "D6", "D8", "DIN", "D5",
+            "D9", "D12", "D10", "D11", "D7"));
    *r++ = new command_child( "PWM0",    fake_cmd);
 
    // DIO
