@@ -69,6 +69,8 @@ class xbsh_state {
 
       std::list<api_frame*> received_frames;
       boost::mutex received_frames_mutex;
+
+      boost::condition_variable received_frames_cond;
       
    public:
       xbsh_state(std::string port, int baud = 9600);

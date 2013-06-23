@@ -160,8 +160,12 @@ void xbsh_state::operator()() {
                            // TODO: lock output array and append
                            api_frame * f = new api_frame(type, id, status, 
                                  command, d);
-                           boost::mutex::scoped_lock lock(received_frames_mutex);
-                           received_frames.push_back(f);
+                           {
+                              boost::mutex::scoped_lock lock(
+                                    received_frames_mutex);
+                              received_frames.push_back(f);
+                           }
+                           received_frames_cond.notify_one();
                         }
                      }
                      break;
@@ -194,8 +198,12 @@ void xbsh_state::operator()() {
                            // TODO: lock output array and append
                            api_frame * f = new api_remote_frame(type, id,
                                  status, command, source, net, d);
-                           boost::mutex::scoped_lock lock(received_frames_mutex);
-                           received_frames.push_back(f);
+                           {
+                              boost::mutex::scoped_lock lock(
+                                    received_frames_mutex);
+                              received_frames.push_back(f);
+                           }
+                           received_frames_cond.notify_one();
                         }
                      }
                      break;
@@ -223,8 +231,8 @@ void xbsh_state::operator()() {
 }
 
 api_frame * xbsh_state::read_AT() {
-   sleep(1);
    boost::mutex::scoped_lock lock(received_frames_mutex);
+   received_frames_cond.timed_wait(lock, boost::posix_time::seconds(1));
    if( received_frames.size() > 0 ) {
       api_frame * res = received_frames.front();
       received_frames.pop_front();
