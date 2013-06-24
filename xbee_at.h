@@ -43,6 +43,7 @@ class at_cmd;
 
 #include "xbsh2.h"
 #include "xbee_at_cmd.h"
+#include "prefix_map.h"
 
 #include <string>
 
@@ -90,6 +91,38 @@ class at_cmd_debug : public at_cmd_rw {
    protected:
       virtual int read(xbsh_state * state);
       virtual int write(xbsh_state * state, std::string arg);
+};
+
+class at_cmd_enum : public at_cmd_rw {
+   private:
+      std::string cmd;
+      std::map<int, std::string> values;
+      prefix_map<int> keys;
+
+   public:
+      at_cmd_enum(std::string c, int n, ...);
+
+      virtual int read(xbsh_state * state);
+      virtual int write(xbsh_state * state, std::string arg);
+      virtual std::list<std::string> get_completions(std::string prefix);
+};
+
+class at_cmd_flags : public at_cmd_rw {
+   // assumptions: all of the flag fields are continuous, starting at bit 0,
+   // and all are two bytes in size
+   private:
+      std::string cmd;
+      prefix_map<int> keys;
+      std::map<int, std::string> values;
+
+      std::list<std::string> split(std::string in);
+
+   public:
+      at_cmd_flags(std::string c, int n, ...);
+
+      virtual int read(xbsh_state * state);
+      virtual int write(xbsh_state * state, std::string arg);
+      virtual std::list<std::string> get_completions(std::string prefix);
 };
 
 command ** diag();

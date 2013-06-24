@@ -15,6 +15,7 @@
 #include "xbee_at.h"
 #include "xbee_at_cmd.h"
 #include "xbee_at_io.h"
+#include "xbee_at_serial.h"
 #include "prefix_map.h"
 
 #include <boost/foreach.hpp>
@@ -111,24 +112,6 @@ std::list<std::string> command_child::get_completions(std::string prefix) {
       return std::list<std::string>();
    }
 }
-
-command * serial_api[] = {
-   new command_child( "escape",  fake_cmd),
-   new command_child( "options", fake_cmd),
-   0
-};
-
-command * serial_c[] = {
-   new command_parent( "api", serial_api),
-
-   new command_child( "baud",                  fake_cmd),
-   new command_child( "parity",                fake_cmd),
-   new command_child( "stop",                  fake_cmd),
-   new command_child( "packetization-timeout", fake_cmd),
-   new command_child( "DIO6",                  fake_cmd),
-   new command_child( "DIO7",                  fake_cmd),
-   0
-};
 
 command * enc[] = {
    new command_child( "link-key",   fake_cmd),
@@ -234,7 +217,7 @@ command * toplevel[] = {
    new command_parent( "encryption", enc       ),
    new command_parent( "net",        net       ),
    new command_parent( "rf",         rf        ),
-   new command_parent( "serial",     serial_c  ),
+   new command_parent( "serial",     serial_c()),
    new command_parent( "sleep",      sleep_c   ),
 
    new command_child( "discover-nodes",   fake_cmd ),

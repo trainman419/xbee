@@ -9,3 +9,5 @@
 //  serial DIO7 config (ATD7)
 //  serial DIO6 config (ATD6)
 //
+
+command ** serial_c();
