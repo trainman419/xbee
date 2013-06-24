@@ -241,6 +241,31 @@ api_frame * xbsh_state::read_AT() {
    return NULL;
 }
 
+std::string api_frame::get_error() {
+   std::string err;
+   switch(status) {
+      case 0:
+         err = "No Error??";
+         break;
+      case 1:
+         err = "ERROR";
+         break;
+      case 2:
+         err = "Invalid Command";
+         break;
+      case 3:
+         err = "Invalid Parameter";
+         break;
+      case 4:
+         err = "Tx Failure";
+         break;
+      default:
+         err = "Unknown error";
+         break;
+   }
+   return err;
+}
+
 std::string api_frame::to_string() {
    std::string res;
    for( int i=0; i<data.size(); i++ ) {

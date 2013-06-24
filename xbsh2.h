@@ -34,6 +34,8 @@ class api_frame {
       uint8_t get_type() { return type; }
       uint8_t get_id() { return id; }
       uint8_t get_status() { return status; }
+      bool ok() { return status == 0; }
+      std::string get_error();
       std::string get_command() { return command; }
       std::vector<uint8_t> get_data() { return data; }
 

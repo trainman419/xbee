@@ -195,7 +195,7 @@ int at_cmd_enum::read(xbsh_state * state) {
    state->send_AT(cmd, 0, 0);
    api_frame * ret = state->read_AT();
    if( ret ) {
-      if( ret->get_status() == 0 ) {
+      if( ret->ok() ) {
          std::vector<uint8_t> data = ret->get_data();
          if( data.size() == 1 ) {
             if( values.count(data[0]) == 1 ) {
@@ -210,28 +210,7 @@ int at_cmd_enum::read(xbsh_state * state) {
             return 1;
          }
       } else {
-         std::string err;
-         switch(ret->get_status()) {
-            case 0:
-               err = "No Error??";
-               break;
-            case 1:
-               err = "ERROR";
-               break;
-            case 2:
-               err = "Invalid Command";
-               break;
-            case 3:
-               err = "Invalid Parameter";
-               break;
-            case 4:
-               err = "Tx Failure";
-               break;
-            default:
-               err = "Unknown error";
-               break;
-         }
-         printf("%s\n", err.c_str());
+         printf("Error: %s\n", ret->get_error().c_str());
          return 1;
       }
    } else {
@@ -248,11 +227,11 @@ int at_cmd_enum::write(xbsh_state * state, std::string arg) {
       state->send_AT(cmd, val, 1);
       api_frame * ret = state->read_AT();
       if( ret ) {
-         if( ret->get_status() == 0 ) {
+         if( ret->ok() ) {
             printf("Success: %s\n", values[*n].c_str());
             return 0;
          } else {
-            printf("Error: %d\n", ret->get_status());
+            printf("Error: %s\n", ret->get_error().c_str());
             return 2;
          }
       } else {
@@ -306,56 +285,33 @@ int at_cmd_flags::read(xbsh_state * state) {
    state->send_AT(cmd, 0, 0);
    api_frame * ret = state->read_AT();
    if( ret ) {
-      std::string err;
-      switch( ret->get_status() ) {
-         case 0:
-            {
-               std::vector<uint8_t> data = ret->get_data();
-               if( data.size() == 2 ) {
-                  int flags = data[0] << 8 | data[1];
-                  std::list<std::string> res;
-                  for( int i=1; i<0xFFFF; i <<= 1 ) {
-                     if( i & flags ) {
-                        res.push_back(values[i]);
-                     }
-                  }
-                  res.sort();
-                  std::string r;
-                  if( res.size() > 0 ) {
-                     r = res.front();
-                     res.pop_front();
-                  }
-                  BOOST_FOREACH(std::string p, res) {
-                     r += "," + p;
-                  }
-                  printf("%s\n", r.c_str());
-               } else {
-                  printf("Expected 2 bytes, got %zd\n", data.size());
-                  return 3;
+      if( ret->ok() ) {
+         std::vector<uint8_t> data = ret->get_data();
+         if( data.size() == 2 ) {
+            int flags = data[0] << 8 | data[1];
+            std::list<std::string> res;
+            for( int i=1; i<0xFFFF; i <<= 1 ) {
+               if( i & flags ) {
+                  res.push_back(values[i]);
                }
             }
-            break;
-         case 1:
-            err = "ERROR";
-            break;
-         case 2:
-            err = "Invalid Command";
-            break;
-         case 3:
-            err = "Invalid Parameter";
-            break;
-         case 4:
-            err = "Tx Failure";
-            break;
-         default:
-            err = "Unknown error";
-            break;
-      }
-      if( err.length() > 0 ) {
-         printf("%s\n", err.c_str());
-         return 2;
+            res.sort();
+            std::string r;
+            if( res.size() > 0 ) {
+               r = res.front();
+               res.pop_front();
+            }
+            BOOST_FOREACH(std::string p, res) {
+               r += "," + p;
+            }
+            printf("%s\n", r.c_str());
+         } else {
+            printf("Expected 2 bytes, got %zd\n", data.size());
+            return 3;
+         }
       } else {
-         return 0;
+         printf("Error: %s\n", ret->get_error().c_str());
+         return 2;
       }
    } else {
       printf("Didn't get a response for command AT%s\n", cmd.c_str());
@@ -385,12 +341,11 @@ int at_cmd_flags::write(xbsh_state * state, std::string arg) {
    state->send_AT(cmd, data, 2);
    api_frame * ret = state->read_AT();
    if( ret ) {
-      // TODO: better error checking
-      if( ret->get_status() == 0 ) {
+      if( ret->ok() ) {
          printf("Success\n");
          return 0;
       } else {
-         printf("Error\n");
+         printf("Error: %s\n", ret->get_error().c_str());
          return 2;
       }
    } else {
