@@ -307,6 +307,7 @@ int at_cmd_flags::read_frame(xbsh_state * state, api_frame * ret) {
          r += "," + p;
       }
       printf("%s\n", r.c_str());
+      return 0;
    } else {
       printf("Expected 2 bytes, got %zd\n", data.size());
       return 3;
