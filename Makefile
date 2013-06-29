@@ -4,7 +4,7 @@ LDLIBS=-lreadline -lserial -lboost_thread
 LINK.o=$(CXX)
 
 TARGETS=xbsh sign xbsh2 prefix_map_test
-OBJS=xbee_api.o xbee_at_cmd.o xbee_at.o xbee_at_io.o xbee_at_serial.o
+OBJS=xbee_api.o xbee_at_cmd.o xbee_at.o xbee_at_io.o xbee_at_serial.o xbee_at_enc.o xbee_at_rf.o xbee_at_net.o xbee_at_sleep.o
 
 all: $(TARGETS)
 .PHONY: all

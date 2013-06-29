@@ -1,13 +1,6 @@
 
 #include "xbee_at_cmd.h"
 
-#include "prefix_map.h"
-
-#include <map>
-#include <string>
-
-#include <boost/foreach.hpp>
-
 command ** io_voltage() {
    command ** result = new command*[3];
    command ** r = result;

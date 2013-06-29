@@ -23,3 +23,8 @@
 //  net destination (ATDL + ATDH)
 //  net children (ATNC)
 //  net serial (ATSL + ATSH)
+
+
+#include "xbee_at_cmd.h"
+
+command ** net();

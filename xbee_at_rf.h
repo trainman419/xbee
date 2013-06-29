@@ -12,3 +12,7 @@
 //  rf zigbee-profile (ATZS)
 //  rf RSSI (ATDB)
 //
+
+#include "xbee_at_cmd.h"
+
+command ** rf();

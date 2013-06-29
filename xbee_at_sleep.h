@@ -9,3 +9,7 @@
 //  sleep now (ATSI)
 //  sleep poll-rate (ATPO)
 //
+
+#include "xbee_at_cmd.h"
+
+command ** sleep_c();

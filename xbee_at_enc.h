@@ -5,3 +5,7 @@
 //  encryption key (ATNK)
 //  encryption link-key (ATKY)
 //
+
+#include "xbee_at_cmd.h"
+
+command ** enc();
