@@ -81,16 +81,46 @@ void xbsh_state::send_packet(packet p) {
    serial.write(p.data, p.sz);
 }
 
+/*
 void xbsh_state::send_AT(std::string at_str, char * data, int data_len) {
    if( at_str.length() != 2 ) {
       fprintf(stderr, "Error: bad AT command: %s", at_str.c_str());
       return;
    }
    int d_sz = data_len + at_str.length();
+   char * d = (char*)malloc(d_sz);
+   memcpy(d, at_str.c_str(), 2);
+   memcpy(d + 2, data, data_len);
+
+   packet p;
+   if( remotes.size() == 0 ) {
+      p = at(d, d_sz);
+   } else {
+      xbee_net net;
+      net.c_net[0] = 0xFF;
+      net.c_net[1] = 0xFE;
+      p = remote_at(remotes.back(), net, d, d_sz);
+   }
+   send_packet(p);
+   free(d);
+}
+*/
+
+void xbsh_state::send_AT(std::string at_str) {
+   send_AT(at_str, std::vector<uint8_t>());
+}
+
+void xbsh_state::send_AT(std::string at_str, std::vector<uint8_t> data) {
+   if( at_str.length() != 2 ) {
+      fprintf(stderr, "Error: bad AT command: %s", at_str.c_str());
+      return;
+   }
+   int d_sz = at_str.length() + data.size();
    char * d = (char*)malloc(d_sz + 1);
    memcpy(d, at_str.c_str(), 2);
-   memcpy(d + at_str.length(), data, data_len);
-   d[d_sz] = 0; // append a null
+   for( int i=0; i<data.size(); i++ ) {
+      d[i+2] = data[i];
+   }
 
    packet p;
    if( remotes.size() == 0 ) {

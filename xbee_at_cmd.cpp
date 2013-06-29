@@ -22,15 +22,10 @@
 
 #include <stdio.h>
 
-/*
-int fake_cmd(const char * args) {
-   printf("Fake command: %s\n", args);
-   return 0;
-}
-*/
-
 class fake_at_cmd : public at_cmd {
    public:
+      fake_at_cmd() : at_cmd("") {}
+
       virtual int run(xbsh_state * state, std::string args) {
          printf("Fake command: %s\n", args.c_str());
          return 0;
@@ -112,6 +107,27 @@ std::list<std::string> command_child::get_completions(std::string prefix) {
       return std::list<std::string>();
    }
 }
+
+class at_cmd_discover : public at_cmd_ro {
+   public:
+      at_cmd_discover() : at_cmd_ro("ND") {}
+
+   protected:
+      virtual int read(xbsh_state * state) {
+         state->send_AT(cmd);
+         api_frame * ret = state->read_AT();
+         while( ret && ret->ok() && ret->get_data().size() > 0 ) {
+            printf("Got %zd bytes\n", ret->get_data().size());
+            ret = state->read_AT();
+         }
+         if( ret && ! ret->ok() ) {
+            printf("Error: %s\n", ret->get_error().c_str());
+            return 1;
+         }
+         printf("Discovery done\n");
+         return 0;
+      }
+};
 
 command * enc[] = {
    new command_child( "link-key",   fake_cmd),
@@ -220,12 +236,12 @@ command * toplevel[] = {
    new command_parent( "serial",     serial_c()),
    new command_parent( "sleep",      sleep_c   ),
 
-   new command_child( "discover-nodes",   fake_cmd ),
+   new command_child( "discover-nodes", new at_cmd_discover() ),
    new command_child( "resolve-ni",       fake_cmd ),
    new command_child( "comission",        fake_cmd ),
-   new command_child( "apply",            fake_cmd ),
-   new command_child( "write",            fake_cmd ),
-   new command_child( "defaults",         fake_cmd ),
+   new command_child( "apply", new at_cmd_simple("AC") ),
+   new command_child( "write", new at_cmd_simple("WR") ),
+   new command_child( "defaults", new at_cmd_simple("RE") ),
    new command_child( "device-type",      fake_cmd ),
    new command_child( "debug",  new at_cmd_debug() ),
 

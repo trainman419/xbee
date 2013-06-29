@@ -51,6 +51,10 @@ class at_cmd;
 //typedef std::string (*command_at)(std::string args);
 
 class at_cmd {
+   protected:
+      std::string cmd;
+      at_cmd(std::string c) : cmd(c) {}
+
    public:
       virtual int run(xbsh_state * state, std::string arg) = 0; 
 
@@ -59,34 +63,40 @@ class at_cmd {
       }
 };
 
-class at_cmd_ro : public at_cmd {
-   public:
-      virtual int run(xbsh_state * state, std::string);
-
-   protected:
-      virtual int read(xbsh_state * state) = 0;
-};
-
 class at_cmd_rw : public at_cmd {
    public:
       virtual int run(xbsh_state * state, std::string);
 
    protected:
-      virtual int read(xbsh_state * state) = 0;
-      virtual int write(xbsh_state * state, std::string arg) = 0;
+      at_cmd_rw(std::string c) : at_cmd(c) {}
+      virtual int read(xbsh_state * state);
+      virtual int write(xbsh_state * state, std::string arg);
+
+      virtual int read_frame(xbsh_state * state, api_frame * ret) { return -1; }
+      virtual std::vector<uint8_t> write_frame(xbsh_state * state, 
+            std::string arg) { return std::vector<uint8_t>(); }
 };
 
-class at_cmd_wo : public at_cmd {
+class at_cmd_ro : public at_cmd_rw {
    public:
       virtual int run(xbsh_state * state, std::string);
 
    protected:
-      virtual int write(xbsh_state * state, std::string arg) = 0;
+      at_cmd_ro(std::string c) : at_cmd_rw(c) {}
+};
+
+class at_cmd_wo : public at_cmd_rw {
+   public:
+      virtual int run(xbsh_state * state, std::string);
+
+   protected:
+      at_cmd_wo(std::string c) : at_cmd_rw(c) {}
 };
 
 class at_cmd_debug : public at_cmd_rw {
    public:
       virtual std::list<std::string> get_completions(std::string prefix);
+      at_cmd_debug() : at_cmd_rw("") {}
 
    protected:
       virtual int read(xbsh_state * state);
@@ -95,15 +105,15 @@ class at_cmd_debug : public at_cmd_rw {
 
 class at_cmd_enum : public at_cmd_rw {
    private:
-      std::string cmd;
       std::map<int, std::string> values;
       prefix_map<int> keys;
 
    public:
       at_cmd_enum(std::string c, int n, ...);
 
-      virtual int read(xbsh_state * state);
-      virtual int write(xbsh_state * state, std::string arg);
+      virtual int read_frame(xbsh_state * state, api_frame * ret);
+      virtual std::vector<uint8_t> write_frame(xbsh_state * state, 
+            std::string arg);
       virtual std::list<std::string> get_completions(std::string prefix);
 };
 
@@ -111,7 +121,6 @@ class at_cmd_flags : public at_cmd_rw {
    // assumptions: all of the flag fields are continuous, starting at bit 0,
    // and all are two bytes in size
    private:
-      std::string cmd;
       prefix_map<int> keys;
       std::map<int, std::string> values;
 
@@ -120,9 +129,15 @@ class at_cmd_flags : public at_cmd_rw {
    public:
       at_cmd_flags(std::string c, int n, ...);
 
-      virtual int read(xbsh_state * state);
-      virtual int write(xbsh_state * state, std::string arg);
+      virtual int read_frame(xbsh_state * state, api_frame * ret);
+      virtual std::vector<uint8_t> write_frame(xbsh_state * state, std::string arg);
       virtual std::list<std::string> get_completions(std::string prefix);
+};
+
+class at_cmd_simple : public at_cmd {
+   public:
+      at_cmd_simple(std::string cmd) : at_cmd(cmd) {}
+      virtual int run(xbsh_state * state, std::string arg);
 };
 
 command ** diag();

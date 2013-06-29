@@ -30,6 +30,41 @@ int at_cmd_rw::run(xbsh_state * state, std::string arg) {
    }
 }
 
+int at_cmd_rw::read(xbsh_state * state) {
+   state->send_AT(cmd);
+   api_frame * ret = state->read_AT();
+   if( ret ) {
+      if( ret->ok() ) {
+         return read_frame(state, ret);
+      } else {
+         printf("Error: %s\n", ret->get_error().c_str());
+         return 1;
+      }
+   } else {
+      printf("Didn't get response for command AT%s\n", cmd.c_str());
+      return 1;
+   }
+}
+
+int at_cmd_rw::write(xbsh_state * state, std::string arg) {
+   std::vector<uint8_t> data = write_frame(state, arg);
+   if( data.size() == 0 ) return 3;
+   state->send_AT(cmd, data);
+   api_frame * ret = state->read_AT();
+   if( ret ) {
+      if( ret->ok() ) {
+         printf("Success\n");
+         return 0;
+      } else {
+         printf("Error: %s\n", ret->get_error().c_str());
+         return 1;
+      }
+   } else {
+      printf("Error: didn't get confirmation\n");
+      return 2;
+   }
+}
+
 int at_cmd_wo::run(xbsh_state * state, std::string arg) {
    if( arg.length() > 0 ) {
       return write(state, arg);
@@ -41,16 +76,15 @@ int at_cmd_wo::run(xbsh_state * state, std::string arg) {
 
 class at_cmd_ro_hex : public at_cmd_ro {
    private:
-      std::string at_str;
       std::string flavor;
       int len;
 
    public:
       at_cmd_ro_hex(std::string at, std::string f, int l) : 
-        at_str(at), flavor(f), len(l) {}
+        at_cmd_ro(at), flavor(f), len(l) {}
 
       virtual int read(xbsh_state * state) {
-         state->send_AT(at_str, 0, 0);
+         state->send_AT(cmd);
          api_frame * result = state->read_AT();
          if( result ) {
             std::vector<uint8_t> data = result->get_data();
@@ -73,66 +107,64 @@ class at_cmd_ro_hex : public at_cmd_ro {
 
 class at_cmd_status : public at_cmd_ro {
    public:
-      virtual int read(xbsh_state * state) {
-         state->send_AT("AI", 0, 0);
-         api_frame * result = state->read_AT();
-         if( result ) {
-            std::vector<uint8_t> data = result->get_data();
-            if( data.size() != 1 ) {
-               printf("Got %zd bytes, expected 1\n", data.size());
+      at_cmd_status() : at_cmd_ro("AI") {}
+
+      virtual int read_frame(xbsh_state * state, api_frame * result) {
+         std::vector<uint8_t> data = result->get_data();
+         if( data.size() != 1 ) {
+            printf("Got %zd bytes, expected 1\n", data.size());
+            return 1;
+         }
+         uint8_t status = data[0];
+         switch(status) {
+            case 0:
+               printf("Successfully joined/formed network\n");
+               break;
+            case 0x21:
+               printf("Scan found no PANs\n");
+               break;
+            case 0x22:
+               printf("Scan found no valid PANs based on current SC and ID settings\n");
+               break;
+            case 0x23:
+               printf("Valid Coordinator or Routers found, but they are not allowing joining (NJ expired)\n");
+               break;
+            case 0x24:
+               printf("No joinable beacons were found\n");
+               break;
+            case 0x25:
+               printf("Unexpected state, node should not be attempting to join at this time\n");
+               break;
+            case 0x27:
+               printf("Node Joining attempt failed (typically due to incompatible security settings)\n");
+               break;
+            case 0x2A:
+               printf("Coordinator Start attempt failed\n");
+               break;
+            case 0x2B:
+               printf("Checking for an existing coordinator\n");
+               break;
+            case 0x2C:
+               printf("Attempt to leave the network failed\n");
+               break;
+            case 0xAB:
+               printf("Attempted to join a device that did not respond.\n");
+               break;
+            case 0xAC:
+               printf("Secure join error - network security key received unsecured\n");
+               break;
+            case 0xAD:
+               printf("Secure join error - network security key not received\n");
+               break;
+            case 0xAF:
+               printf("Secure join error - joining device does not have the right preconfigured link key\n");
+               break;
+            case 0xFF:
+               printf("Scanning for a ZigBee network (routers and end devices)\n");
+               break;
+            default:
+               printf("Unknown associate status %02X\n", status);
                return 1;
-            }
-            uint8_t status = data[0];
-            switch(status) {
-               case 0:
-                  printf("Successfully joined/formed network\n");
-                  break;
-               case 0x21:
-                  printf("Scan found no PANs\n");
-                  break;
-               case 0x22:
-                  printf("Scan found no valid PANs based on current SC and ID settings\n");
-                  break;
-               case 0x23:
-                  printf("Valid Coordinator or Routers found, but they are not allowing joining (NJ expired)\n");
-                  break;
-               case 0x24:
-                  printf("No joinable beacons were found\n");
-                  break;
-               case 0x25:
-                  printf("Unexpected state, node should not be attempting to join at this time\n");
-                  break;
-               case 0x27:
-                  printf("Node Joining attempt failed (typically due to incompatible security settings)\n");
-                  break;
-               case 0x2A:
-                  printf("Coordinator Start attempt failed\n");
-                  break;
-               case 0x2B:
-                  printf("Checking for an existing coordinator\n");
-                  break;
-               case 0x2C:
-                  printf("Attempt to leave the network failed\n");
-                  break;
-               case 0xAB:
-                  printf("Attempted to join a device that did not respond.\n");
-                  break;
-               case 0xAC:
-                  printf("Secure join error - network security key received unsecured\n");
-                  break;
-               case 0xAD:
-                  printf("Secure join error - network security key not received\n");
-                  break;
-               case 0xAF:
-                  printf("Secure join error - joining device does not have the right preconfigured link key\n");
-                  break;
-               case 0xFF:
-                  printf("Scanning for a ZigBee network (routers and end devices)\n");
-                  break;
-               default:
-                  printf("Unknown associate status %02X\n", status);
-                  return 1;
-            }
          }
          return 0;
       }
@@ -175,7 +207,7 @@ int at_cmd_debug::write(xbsh_state * state, std::string arg) {
    }
 }
 
-at_cmd_enum::at_cmd_enum(std::string c, int n, ...) : cmd(c) {
+at_cmd_enum::at_cmd_enum(std::string c, int n, ...) : at_cmd_rw(c) {
    va_list vl;
    int idx;
    char * val;
@@ -191,57 +223,31 @@ at_cmd_enum::at_cmd_enum(std::string c, int n, ...) : cmd(c) {
    va_end(vl);
 }
 
-int at_cmd_enum::read(xbsh_state * state) {
-   state->send_AT(cmd, 0, 0);
-   api_frame * ret = state->read_AT();
-   if( ret ) {
-      if( ret->ok() ) {
-         std::vector<uint8_t> data = ret->get_data();
-         if( data.size() == 1 ) {
-            if( values.count(data[0]) == 1 ) {
-               printf("%s\n", values[data[0]].c_str());
-               return 0;
-            } else {
-               printf("Got Unknown result %d\n", data[0]);
-               return 1;
-            }
-         } else {
-            printf("Expected 1 byte; got %zd bytes\n", data.size());
-            return 1;
-         }
+int at_cmd_enum::read_frame(xbsh_state * state, api_frame * ret) {
+   std::vector<uint8_t> data = ret->get_data();
+   if( data.size() == 1 ) {
+      if( values.count(data[0]) == 1 ) {
+         printf("%s\n", values[data[0]].c_str());
+         return 0;
       } else {
-         printf("Error: %s\n", ret->get_error().c_str());
+         printf("Got Unknown result %d\n", data[0]);
          return 1;
       }
    } else {
-      printf("Didn't get response for command AT%s\n", cmd.c_str());
+      printf("Expected 1 byte; got %zd bytes\n", data.size());
       return 1;
    }
 }
 
-int at_cmd_enum::write(xbsh_state * state, std::string arg) {
+std::vector<uint8_t> at_cmd_enum::write_frame(xbsh_state * state, std::string arg) {
    int * n = keys.get(arg);
+   std::vector<uint8_t> ret;
    if( n ) {
-      char val[1];
-      val[0] = *n;
-      state->send_AT(cmd, val, 1);
-      api_frame * ret = state->read_AT();
-      if( ret ) {
-         if( ret->ok() ) {
-            printf("Success: %s\n", values[*n].c_str());
-            return 0;
-         } else {
-            printf("Error: %s\n", ret->get_error().c_str());
-            return 2;
-         }
-      } else {
-         printf("Error: didn't get confirmation\n");
-         return 2;
-      }
+      ret.push_back(*n);
    } else {
       printf("Bad value %s\n", arg.c_str());
-      return 1;
    }
+   return ret;
 }
 
 std::list<std::string> at_cmd_enum::get_completions(std::string prefix) {
@@ -265,7 +271,7 @@ std::list<std::string> at_cmd_flags::split(std::string in) {
    return res;
 }
 
-at_cmd_flags::at_cmd_flags(std::string c, int n, ...) : cmd(c) {
+at_cmd_flags::at_cmd_flags(std::string c, int n, ...) : at_cmd_rw(c) {
    va_list vl;
    int idx = 1;
    char * val;
@@ -281,45 +287,34 @@ at_cmd_flags::at_cmd_flags(std::string c, int n, ...) : cmd(c) {
    va_end(vl);
 }
 
-int at_cmd_flags::read(xbsh_state * state) {
-   state->send_AT(cmd, 0, 0);
-   api_frame * ret = state->read_AT();
-   if( ret ) {
-      if( ret->ok() ) {
-         std::vector<uint8_t> data = ret->get_data();
-         if( data.size() == 2 ) {
-            int flags = data[0] << 8 | data[1];
-            std::list<std::string> res;
-            for( int i=1; i<0xFFFF; i <<= 1 ) {
-               if( i & flags ) {
-                  res.push_back(values[i]);
-               }
-            }
-            res.sort();
-            std::string r;
-            if( res.size() > 0 ) {
-               r = res.front();
-               res.pop_front();
-            }
-            BOOST_FOREACH(std::string p, res) {
-               r += "," + p;
-            }
-            printf("%s\n", r.c_str());
-         } else {
-            printf("Expected 2 bytes, got %zd\n", data.size());
-            return 3;
+int at_cmd_flags::read_frame(xbsh_state * state, api_frame * ret) {
+   std::vector<uint8_t> data = ret->get_data();
+   if( data.size() == 2 ) {
+      int flags = data[0] << 8 | data[1];
+      std::list<std::string> res;
+      for( int i=1; i<0xFFFF; i <<= 1 ) {
+         if( i & flags ) {
+            res.push_back(values[i]);
          }
-      } else {
-         printf("Error: %s\n", ret->get_error().c_str());
-         return 2;
       }
+      res.sort();
+      std::string r;
+      if( res.size() > 0 ) {
+         r = res.front();
+         res.pop_front();
+      }
+      BOOST_FOREACH(std::string p, res) {
+         r += "," + p;
+      }
+      printf("%s\n", r.c_str());
    } else {
-      printf("Didn't get a response for command AT%s\n", cmd.c_str());
-      return 1;
+      printf("Expected 2 bytes, got %zd\n", data.size());
+      return 3;
    }
 }
 
-int at_cmd_flags::write(xbsh_state * state, std::string arg) {
+std::vector<uint8_t> at_cmd_flags::write_frame(xbsh_state * state,
+      std::string arg) {
    std::list<std::string> parts = split(arg);
    int flags = 0;
    int err = 0;
@@ -332,26 +327,14 @@ int at_cmd_flags::write(xbsh_state * state, std::string arg) {
          err = 1;
       }
    }
+   std::vector<uint8_t> ret;
    if( err ) {
-      return 1;
+      return ret;
    }
    char data[2];
-   data[0] = flags >> 8;
-   data[1] = flags;
-   state->send_AT(cmd, data, 2);
-   api_frame * ret = state->read_AT();
-   if( ret ) {
-      if( ret->ok() ) {
-         printf("Success\n");
-         return 0;
-      } else {
-         printf("Error: %s\n", ret->get_error().c_str());
-         return 2;
-      }
-   } else {
-      printf("Didn't get a response\n");
-      return 1;
-   }
+   ret.push_back(flags >> 8);
+   ret.push_back(flags);
+   return ret;
 }
 
 std::list<std::string> at_cmd_flags::get_completions(std::string prefix) {
@@ -378,6 +361,27 @@ std::list<std::string> at_cmd_flags::get_completions(std::string prefix) {
       res.push_back(p + comp);
    }
    return res;
+}
+
+int at_cmd_simple::run(xbsh_state * state, std::string arg) {
+   if( arg.length() > 0 ) {
+      printf("This command does not take arguments\n");
+      return 1;
+   }
+   state->send_AT(cmd);
+   api_frame * ret = state->read_AT();
+   if( ret ) {
+      if( ret->ok() ) {
+         printf("Success\n");
+         return 0;
+      } else {
+         printf("Error: %s\n", ret->get_error().c_str());
+         return 3;
+      }
+   } else {
+      printf("Didn't get a response\n");
+      return 2;
+   }
 }
 
 command ** diag() {

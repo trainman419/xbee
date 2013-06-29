@@ -86,7 +86,9 @@ class xbsh_state {
       void send_packet(packet p);
 
       // send AT command
-      void send_AT(std::string at, char * data, int data_len);
+      //void send_AT(std::string at, char * data, int data_len);
+      void send_AT(std::string at, std::vector<uint8_t> data);
+      void send_AT(std::string at);
       
       // receive AT command
       api_frame * read_AT();
