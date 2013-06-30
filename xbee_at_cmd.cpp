@@ -120,7 +120,52 @@ class at_cmd_discover : public at_cmd_ro {
          state->send_AT(cmd);
          api_frame * ret = state->read_AT();
          while( ret && ret->ok() && ret->get_data().size() > 0 ) {
-            printf("Got %zd bytes\n", ret->get_data().size());
+            std::vector<uint8_t> data = ret->get_data();
+            printf("Got %zd bytes\n", data.size());
+            uint64_t serial = 0;
+            int i=0;
+            for( i=0; i<8; i++ ) {
+              serial <<= 8;
+              serial |= data[i];
+            }
+            std::string ni;
+            for( ; data[i]; i++ ) {
+              ni.push_back(data[i]);
+            }
+            i++; // eat trailing null
+            uint16_t parent = data[i++];
+            parent <<= 8;
+            parent |= data[i++];
+            std::string type;
+            switch(data[i++]) {
+              case 0:
+                type = "Coordinator";
+                break;
+              case 1:
+                type = "Router";
+                break;
+              case 2:
+                type = "End Device";
+                break;
+              default:
+                type = "Unknown";
+                break;
+            }
+            uint8_t status = data[i++]; // ?
+            uint16_t profile = data[i++];
+            profile <<= 8;
+            profile |= data[i++];
+            uint16_t manufacturer = data[i++];
+            manufacturer <<= 8;
+            manufacturer |= data[i++];
+            printf("Serial:       %016llX\n", serial);
+            printf("Node ID:      %s\n", ni.c_str());
+            printf("Parent:       %04X\n", parent);
+            printf("Type:         %s\n", type.c_str());
+            printf("Status:       %d\n", status);
+            printf("Profile:      %d\n", profile);
+            printf("Manufacturer: %d\n", manufacturer);
+
             ret = state->read_AT();
          }
          if( ret && ! ret->ok() ) {
