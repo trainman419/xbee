@@ -18,7 +18,12 @@ command ** io() {
    *r++ = new command_child( "pull-up", new at_cmd_flags("PR",14,
             "D4", "D3", "D2", "D1", "D0", "D6", "D8", "DIN", "D5",
             "D9", "D12", "D10", "D11", "D7"));
-   *r++ = new command_child( "PWM0",    fake_cmd);
+   *r++ = new command_child( "PWM0", new at_cmd_enum("P0", 5,
+            0, "disabled",
+            1, "RSSI",
+            3, "digital-in",
+            4, "off",
+            5, "on"));
 
    // DIO
    at_cmd * dio0 = new at_cmd_enum("D0", 5, 

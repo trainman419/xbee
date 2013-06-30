@@ -135,7 +135,7 @@ class at_cmd_discover : public at_cmd_ro {
 command ** toplevel() {
    command ** result = new command*[18];
    command ** r = result;
-   *r++ = new command_parent( "diag",       diag()    );
+   *r++ = new command_parent( "diagnostic", diag()    );
    *r++ = new command_parent( "at",         at_c()    );
    *r++ = new command_parent( "reset",      reset_c() );
    *r++ = new command_parent( "io",         io()      );

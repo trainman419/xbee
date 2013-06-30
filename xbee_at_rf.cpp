@@ -16,7 +16,9 @@ command ** rf_power() {
    command ** result = new command*[4];
    command ** r = result;
    *r++ = new command_child( "level", fake_cmd );
-   *r++ = new command_child( "mode",  fake_cmd );
+   *r++ = new command_child( "mode",  new at_cmd_enum("PM", 2,
+            0, "normal",
+            1, "boost"));
    *r++ = new command_child( "peak",  fake_cmd );
    *r++ = 0;
    return result;
@@ -32,7 +34,8 @@ command ** rf() {
    *r++ = new command_child( "channel-verification", new at_cmd_enum("JV", 2,
             0, "disabled",
             1, "enabled"));
-   *r++ = new command_child( "zigbee-profile",       fake_cmd );
+   *r++ = new command_child( "zigbee-profile", new at_cmd_enum("ZS", 3,
+            0, "0", 1, "1", 2, "2") );
    *r++ = new command_child( "RSSI",                 fake_cmd );
    *r++ = 0;
    return result;

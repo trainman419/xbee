@@ -74,36 +74,26 @@ int at_cmd_wo::run(xbsh_state * state, std::string arg) {
    }
 }
 
-class at_cmd_ro_hex : public at_cmd_ro {
-   private:
-      std::string flavor;
-      int len;
-
-   public:
-      at_cmd_ro_hex(std::string at, std::string f, int l) : 
-        at_cmd_ro(at), flavor(f), len(l) {}
-
-      virtual int read(xbsh_state * state) {
-         state->send_AT(cmd);
-         api_frame * result = state->read_AT();
-         if( result ) {
-            std::vector<uint8_t> data = result->get_data();
-            if(data.size() != len) {
-               printf("Error: Got %zd bytes, expected %d\n", data.size(), len);
-               return 1;
-            }
-            printf("%s: ", flavor.c_str());
-            BOOST_FOREACH( uint8_t u, data ) {
-              printf("%02X", u);
-            }
-            printf("\n");
-         } else {
-            printf("Failed to parse response packet\n");
-            return 1;
-         }
-         return 0;
+int at_cmd_ro_hex::read(xbsh_state * state) {
+   state->send_AT(cmd);
+   api_frame * result = state->read_AT();
+   if( result ) {
+      std::vector<uint8_t> data = result->get_data();
+      if(data.size() != len) {
+         printf("Error: Got %zd bytes, expected %d\n", data.size(), len);
+         return 1;
       }
-};
+      printf("%s: ", flavor.c_str());
+      BOOST_FOREACH( uint8_t u, data ) {
+         printf("%02X", u);
+      }
+      printf("\n");
+   } else {
+      printf("Failed to parse response packet\n");
+      return 1;
+   }
+   return 0;
+}
 
 class at_cmd_status : public at_cmd_ro {
    public:
@@ -385,10 +375,51 @@ int at_cmd_simple::run(xbsh_state * state, std::string arg) {
    }
 }
 
+class at_cmd_fw : public at_cmd_ro {
+   public:
+      at_cmd_fw() : at_cmd_ro("VR") {};
+
+   protected:
+      virtual int read_frame(xbsh_state * state, api_frame * ret) {
+         std::vector<uint8_t> data = ret->get_data();
+         if( data.size() == 2 ) {
+            printf("Firmware version: %02X%02X\n", data[0], data[1]);
+            std::string type;
+            switch(data[0]) {
+               case 0x20:
+                  type = "AT Coordinator";
+                  break;
+               case 0x21:
+                  type = "API Coordinator";
+                  break;
+               case 0x22:
+                  type = "AT Router";
+                  break;
+               case 0x23:
+                  type = "API Router";
+                  break;
+               case 0x28:
+                  type = "AT End Device";
+                  break;
+               case 0x29:
+                  type = "API End Device";
+                  break;
+               default:
+                  type = "Unknown";
+                  break;
+            }
+            printf("%s\n", type.c_str());
+            return 0;
+         } else {
+            printf("Got %zd bytes; expected 2\n", data.size());
+            return 1;
+         }
+      }
+};
+
 command ** diag() {
    command ** r = new command*[4];
-   r[0] = new command_child( "fw-version",       new at_cmd_ro_hex("VR",
-         "Firmware version", 2) );
+   r[0] = new command_child( "fw-version", new at_cmd_fw());
    r[1] = new command_child( "hw-version",       new at_cmd_ro_hex("HV", 
          "Hardware version", 2) );
    // TODO: parse and pretty-print results

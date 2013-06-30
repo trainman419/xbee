@@ -4,8 +4,8 @@
 command ** net_short() {
    command ** result = new command*[3];
    command ** r = result;
-   *r++ = new command_child( "address", fake_cmd );
-   *r++ = new command_child( "parent",  fake_cmd );
+   *r++ = new command_child( "address", new at_cmd_ro_hex("MY", "16-bit network address", 2) );
+   *r++ = new command_child( "parent",  new at_cmd_ro_hex("MP", "16-bit parent address", 2) );
    *r++ = 0;
    return result;
 };
@@ -31,9 +31,9 @@ command ** net_max() {
 command ** net_pan() {
    command ** result = new command*[4];
    command ** r = result;
-   *r++ = new command_child( "operating", fake_cmd );
+   *r++ = new command_child( "operating", new at_cmd_ro_hex("OP", "64-bit Operating PAN ID", 8) );
    *r++ = new command_child( "long",      fake_cmd );
-   *r++ = new command_child( "short",     fake_cmd );
+   *r++ = new command_child( "short", new at_cmd_ro_hex("OI", "16-bit Operating PAN ID", 2) );
    *r++ = 0;
    return result;
 };

@@ -140,6 +140,18 @@ class at_cmd_simple : public at_cmd {
       virtual int run(xbsh_state * state, std::string arg);
 };
 
+class at_cmd_ro_hex : public at_cmd_ro {
+   private:
+      std::string flavor;
+      int len;
+
+   public:
+      at_cmd_ro_hex(std::string at, std::string f, int l) : 
+        at_cmd_ro(at), flavor(f), len(l) {}
+
+      virtual int read(xbsh_state * state);
+};
+
 command ** diag();
 command ** at_c();
 command ** reset_c();
