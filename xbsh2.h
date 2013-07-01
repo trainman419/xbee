@@ -86,7 +86,6 @@ class xbsh_state {
       void send_packet(packet p);
 
       // send AT command
-      //void send_AT(std::string at, char * data, int data_len);
       void send_AT(std::string at, std::vector<uint8_t> data);
       void send_AT(std::string at);
       
@@ -94,9 +93,9 @@ class xbsh_state {
       api_frame * read_AT();
 
       // push and pop the remote address stack
-      void push_remote(xbee_addr remote);
-      xbee_addr get_remote();
-      void pop_remote();
+      void push_remote(xbee_addr remote) { remotes.push_back(remote); }
+      const std::list<xbee_addr> get_remotes() { return remotes; }
+      void pop_remote() { remotes.pop_back(); }
 
       int debug;
 };

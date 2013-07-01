@@ -81,31 +81,6 @@ void xbsh_state::send_packet(packet p) {
    serial.write(p.data, p.sz);
 }
 
-/*
-void xbsh_state::send_AT(std::string at_str, char * data, int data_len) {
-   if( at_str.length() != 2 ) {
-      fprintf(stderr, "Error: bad AT command: %s", at_str.c_str());
-      return;
-   }
-   int d_sz = data_len + at_str.length();
-   char * d = (char*)malloc(d_sz);
-   memcpy(d, at_str.c_str(), 2);
-   memcpy(d + 2, data, data_len);
-
-   packet p;
-   if( remotes.size() == 0 ) {
-      p = at(d, d_sz);
-   } else {
-      xbee_net net;
-      net.c_net[0] = 0xFF;
-      net.c_net[1] = 0xFE;
-      p = remote_at(remotes.back(), net, d, d_sz);
-   }
-   send_packet(p);
-   free(d);
-}
-*/
-
 void xbsh_state::send_AT(std::string at_str) {
    send_AT(at_str, std::vector<uint8_t>());
 }
@@ -136,7 +111,7 @@ void xbsh_state::send_AT(std::string at_str, std::vector<uint8_t> data) {
 }
 
 void xbsh_state::operator()() {
-   std::vector<uint8_t> data;
+   std::vector<uint8_t> raw_data;
 
    while(!read_thread_done) {
       // temporary buffer for incoming data
@@ -144,20 +119,53 @@ void xbsh_state::operator()() {
       serial.read(tmp_data, 64);
       if( tmp_data.size() > 0 ) {
          if( debug ) {
-            printf("RX: ");
+            printf("RX:");
             for( int i=0; i<tmp_data.size(); i++ ) {
-               printf("%02X ", tmp_data[i]);
+               printf(" %02X", tmp_data[i]);
             }
             printf("\n");
          }
       }
 
       // append tmp_data to data
-      data.insert(data.end(), tmp_data.begin(), tmp_data.end());
+      raw_data.insert(raw_data.end(), tmp_data.begin(), tmp_data.end());
 
-      // TODO: eat any starting garbage bytes
+      // eat any starting garbage bytes
+      int bad_cnt = 0;
+      std::vector<uint8_t>::iterator itr;
+      for( itr = raw_data.begin(); 
+            itr != raw_data.end() && *itr != 0x7E;
+            ++itr, ++bad_cnt );
+      raw_data.erase(raw_data.begin(), itr);
+      if( debug && bad_cnt > 0 ) {
+         printf("Ate %d bad leading bytes\n", bad_cnt);
+      }
 
-      if( data.size() > 3 && data[0] == 0x7E ) {
+      if( raw_data.size() > 3 && raw_data[0] == 0x7E ) {
+         std::vector<uint8_t> data;
+         data.reserve(raw_data.size());
+         // un-escape raw data
+         int i=0;
+         data.push_back(raw_data[0]);
+         for( i=1; i<raw_data.size() && raw_data[i] != 0x7E; ++i ) {
+            if(raw_data[i] == 0x7D) {
+               ++i;
+               data.push_back(raw_data[i] ^ 0x20);
+            } else {
+               data.push_back(raw_data[i]);
+            }
+         }
+         // eat bytes off the front of our incoming buffer
+         raw_data.erase(raw_data.begin(), raw_data.begin()+i);
+
+         if( debug ) {
+            printf("RX:");
+            for( i=0; i<data.size(); ++i ) {
+               printf(" %02X", data[i]);
+            }
+            printf("\n");
+         }
+
          int len = data[2] | (data[1] << 8);
          // TODO: only consume the first len bytes, or wait for more if the
          //  buffer has less than len bytes
@@ -187,7 +195,7 @@ void xbsh_state::operator()() {
                            for( int i=0; i<len-5; i++ ) {
                               d[i] = data[i+8];
                            }
-                           // TODO: lock output array and append
+                           // lock output array and append
                            api_frame * f = new api_frame(type, id, status, 
                                  command, d);
                            {
@@ -225,7 +233,7 @@ void xbsh_state::operator()() {
                            for( int i=0; i<len-15; i++ ) {
                               d[i] = data[i+18];
                            }
-                           // TODO: lock output array and append
+                           // lock output array and append
                            api_frame * f = new api_remote_frame(type, id,
                                  status, command, source, net, d);
                            {
@@ -241,20 +249,38 @@ void xbsh_state::operator()() {
                      printf("Unknown response type %X\n", type);
                      break;
                }
-               // eat len+4 bytes off the front of our incoming buffer
-               data.erase(data.begin(), data.begin()+len+4);
             } else {
                printf("Checksum failed\n");
-               // TODO: eat until next start byte
+               // eat until next start byte
+               int bad_cnt = 0;
+               std::vector<uint8_t>::iterator itr = raw_data.begin();
+               ++itr;
+               for( ;
+                     itr != raw_data.end() && *itr != 0x7E;
+                     ++itr, ++bad_cnt );
+               raw_data.erase(raw_data.begin(), itr);
+               if( debug && bad_cnt > 0 ) {
+                  printf("Ate %d bytes\n", bad_cnt);
+               }
             }
          } else {
             printf("Packet length mismatch\n");
-            // TODO: eat until next start byte
+            // eat until next start byte
+            int bad_cnt = 0;
+            std::vector<uint8_t>::iterator itr = raw_data.begin();
+            ++itr;
+            for( ;
+                  itr != raw_data.end() && *itr != 0x7E;
+                  ++itr, ++bad_cnt );
+            raw_data.erase(raw_data.begin(), itr);
+            if( debug && bad_cnt > 0 ) {
+               printf("Ate %d bytes\n", bad_cnt);
+            }
          }
       } else {
          // unknown packet type
-         if( data.size() > 3 ) {
-            printf("Got unknown packet type: %X\n", data[0]);
+         if( raw_data.size() > 3 ) {
+            printf("Got unknown packet type: %02X\n", raw_data[0]);
          }
       }
    }
@@ -262,7 +288,7 @@ void xbsh_state::operator()() {
 
 api_frame * xbsh_state::read_AT() {
    boost::mutex::scoped_lock lock(received_frames_mutex);
-   received_frames_cond.timed_wait(lock, boost::posix_time::seconds(1));
+   received_frames_cond.timed_wait(lock, boost::posix_time::seconds(10));
    if( received_frames.size() > 0 ) {
       api_frame * res = received_frames.front();
       received_frames.pop_front();
