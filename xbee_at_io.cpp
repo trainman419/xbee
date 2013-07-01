@@ -1,6 +1,47 @@
 
 #include "xbee_at_cmd.h"
 
+class at_cmd_sample : public at_cmd_ro {
+   public:
+      at_cmd_sample() : at_cmd_ro("IS") {}
+
+   protected:
+      virtual int read_frame(xbsh_state * state, api_frame * ret) {
+         // parse sample frame
+         std::vector<uint8_t> data = ret->get_data();
+         if( data.size() >= 4 ) {
+            uint8_t sets = data[0];
+            uint16_t digital_mask = (data[1] << 8) | data[2];
+            uint8_t analog_mask = data[3];
+            uint16_t digital_data = 0;
+            int i = 4;
+            if( digital_mask ) {
+               digital_data = data[i++];
+               digital_data <<= 8;
+               digital_data |= data[i++];
+               for( int j=0; j<13; j++ ) {
+                  if( (1<<j) & digital_mask ) {
+                     printf("DIO%d: %d\n", j, (digital_data & (1<<j))>>j);
+                  }
+               }
+            }
+            //uint8_t analog_data[8];
+            for( int j=0; j<4; j++ ) {
+               if( (1<<j) & analog_mask ) {
+                  printf("AD%d: %d\n", j, data[i++]);
+               }
+            }
+            if( (1<<7) & analog_mask ) {
+               printf("Supply: %d\n", data[i++]);
+            }
+            return 0;
+         } else {
+            printf("Didn't get any sensor data\n");
+            return 1;
+         }
+      }
+};
+
 command ** io_voltage() {
    command ** result = new command*[3];
    command ** r = result;
@@ -11,7 +52,7 @@ command ** io_voltage() {
 };
 
 command ** io() {
-   command ** result = new command*[23];
+   command ** result = new command*[24];
    command ** r = result;
    *r++ = new command_parent( "voltage",   io_voltage());
 
@@ -106,6 +147,7 @@ command ** io() {
    *r++ = new command_child( "led-blink-time",   fake_cmd);
    *r++ = new command_child( "RSSI-PWM",         fake_cmd);
    *r++ = new command_child( "temperature",      fake_cmd);
+   *r++ = new command_child( "force-sample", new at_cmd_sample() );
    *r++ = 0;
    return result;
 }

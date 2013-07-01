@@ -22,5 +22,9 @@
 //  io voltage supply (AT%V)
 //  io voltage monitoring (ATV+)
 //
+//  TODO: move to I/O command set
+//  io force-sample (ATIS)
+//  io sensor-sample (AT1S)
+//
 
 command ** io();
