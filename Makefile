@@ -25,10 +25,10 @@ test: prefix_map_test xbsh2
 .PHONY: test
 
 .%.mk: %.c
-	$(CC) -MMD -c $^ -MF $@
+	$(CC) $(CFLAGS) -MMD -c $^ -MF $@
 
 .%.mk: %.cpp
-	$(CXX) -MMD -c $^ -MF $@
+	$(CXX) $(CXXFLAGS) -MMD -c $^ -MF $@
 
 include $(TARGETS:%=.%.mk)
 include $(OBJS:%.o=.%.mk)
