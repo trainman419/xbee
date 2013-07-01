@@ -417,12 +417,55 @@ class at_cmd_fw : public at_cmd_ro {
       }
 };
 
+std::string print_addr(xbee_addr addr) {
+   std::string res;
+   for( int i=0; i<8; i++ ) {
+      char tmp[3];
+      sprintf(tmp, "%02X", addr.c_addr[i]);
+      if( i > 0 && i%2 == 0 ) {
+         res += ":";
+      }
+      res += tmp;
+   }
+   return res;
+}
+
+xbee_addr parse_addr(std::string addr) {
+   xbee_addr res;
+   const char * str = addr.c_str();
+   int cnt = 0;
+
+   int offsets[8] = { 0, 2, 4, 6, 8, 10, 12, 14 };
+   if( addr.length() == ((2*8) + 3) ) {
+      // assume format is 0000:0000:0000:0000
+      offsets[2] += 1;
+      offsets[3] += 1;
+
+      offsets[4] += 2;
+      offsets[5] += 2;
+
+      offsets[6] += 3;
+      offsets[7] += 3;
+   } else if( addr.length() == (2*8) ) {
+      // assume format is 0000000000000000
+   } else {
+      throw std::runtime_error("address format format");
+   }
+
+   for( int i=0; i<8; i++ ) {
+      cnt += sscanf(str+offsets[i], "%02hhX", res.c_addr+i);
+   }
+   if( cnt != 8 ) {
+      throw std::runtime_error("address parse error");
+   }
+   return res;
+}
+
 command ** diag() {
    command ** r = new command*[4];
    r[0] = new command_child( "fw-version", new at_cmd_fw());
    r[1] = new command_child( "hw-version",       new at_cmd_ro_hex("HV", 
          "Hardware version", 2) );
-   // TODO: parse and pretty-print results
    r[2] = new command_child( "associate-status", new at_cmd_status() );
    r[3] = 0;
    return r;

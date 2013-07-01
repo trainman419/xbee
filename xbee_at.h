@@ -22,10 +22,6 @@
 //  comission (ATCB)
 //  resolve-NI (ATDN)
 //
-//  TODO: move to I/O command set
-//  force IO sample (ATIS)
-//  force sensor sample (AT1S)
-//
 //  TODO: shell buitins that don't correspond to AT commands:
 //   show configuration
 //   dump configuration to file
@@ -151,6 +147,9 @@ class at_cmd_ro_hex : public at_cmd_ro {
 
       virtual int read(xbsh_state * state);
 };
+
+xbee_addr parse_addr(std::string addr);
+std::string print_addr(xbee_addr addr);
 
 command ** diag();
 command ** at_c();
