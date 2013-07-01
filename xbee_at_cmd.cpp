@@ -122,11 +122,14 @@ class at_cmd_discover : public at_cmd_ro {
          while( ret && ret->ok() && ret->get_data().size() > 0 ) {
             std::vector<uint8_t> data = ret->get_data();
             printf("Got %zd bytes\n", data.size());
-            uint64_t serial = 0;
             int i=0;
-            for( i=0; i<8; i++ ) {
+            uint16_t net_addr = data[i++];
+            net_addr <<= 8;
+            net_addr |= data[i++];;
+            uint64_t serial = 0;
+            for( int j=0; j<8; j++ ) {
               serial <<= 8;
-              serial |= data[i];
+              serial |= data[i++];
             }
             std::string ni;
             for( ; data[i]; i++ ) {
@@ -158,6 +161,7 @@ class at_cmd_discover : public at_cmd_ro {
             uint16_t manufacturer = data[i++];
             manufacturer <<= 8;
             manufacturer |= data[i++];
+            printf("Net Address:  %04X\n", net_addr);
             printf("Serial:       %016llX\n", serial);
             printf("Node ID:      %s\n", ni.c_str());
             printf("Parent:       %04X\n", parent);
@@ -177,8 +181,35 @@ class at_cmd_discover : public at_cmd_ro {
       }
 };
 
+class at_cmd_remote : public at_cmd_rw {
+   public:
+      at_cmd_remote() : at_cmd_rw("") {}
+
+   protected:
+      virtual int read(xbsh_state * state) {
+         BOOST_FOREACH(xbee_addr addr, state->get_remotes()) {
+            printf("%s\n", print_addr(addr).c_str());
+         }
+         return 0;
+      }
+
+      virtual int write(xbsh_state * state, std::string arg) {
+         if( arg == "pop" ) {
+            state->pop_remote();
+         } else {
+            try {
+               state->push_remote(parse_addr(arg));
+            } catch( std::exception &e ) {
+               printf("%s\n", e.what());
+               return 1;
+            }
+         }
+         return 0;
+      }
+};
+
 command ** toplevel() {
-   command ** result = new command*[18];
+   command ** result = new command*[19];
    command ** r = result;
    *r++ = new command_parent( "diagnostic", diag()    );
    *r++ = new command_parent( "at",         at_c()    );
@@ -198,6 +229,7 @@ command ** toplevel() {
    *r++ = new command_child( "defaults", new at_cmd_simple("RE") );
    *r++ = new command_child( "device-type",      fake_cmd );
    *r++ = new command_child( "debug",  new at_cmd_debug() );
+   *r++ = new command_child( "remote", new at_cmd_remote() );
 
    *r++ = 0;
 
