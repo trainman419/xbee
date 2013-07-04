@@ -31,6 +31,7 @@ class command {
 
    public:
       virtual int run(xbsh_state * state, std::string args) { return 0; }
+      virtual ~command() {}
       virtual std::string get_name() { return name; }
       virtual std::string get_help() { return help; }
 
@@ -49,6 +50,7 @@ class command_parent : public command {
 
    public:
       command_parent(std::string n, command ** sub);
+      virtual ~command_parent() {}
 
       virtual command * get_subcommand(std::string prefix);
       virtual std::list<std::string> get_completions(std::string prefix);
@@ -61,6 +63,7 @@ class command_child : public command {
 
    public:
       command_child(std::string n, at_cmd * c) : command(n, "child"), cmd(c) {}
+      virtual ~command_child() { delete cmd; }
 
       virtual int run(xbsh_state * state, std::string args);
 

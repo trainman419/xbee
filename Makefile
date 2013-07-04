@@ -1,5 +1,5 @@
 CFLAGS=-g
-CXXFLAGS=-g
+CXXFLAGS=-g -Weffc++
 LDLIBS=-lreadline -lserial -lboost_thread
 LINK.o=$(CXX)
 

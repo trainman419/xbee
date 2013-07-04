@@ -57,11 +57,14 @@ class at_cmd {
       virtual std::list<std::string> get_completions(std::string prefix) {
          return std::list<std::string>();
       }
+
+      virtual ~at_cmd() {}
 };
 
 class at_cmd_rw : public at_cmd {
    public:
       virtual int run(xbsh_state * state, std::string);
+      virtual ~at_cmd_rw() {}
 
    protected:
       at_cmd_rw(std::string c) : at_cmd(c) {}
@@ -76,6 +79,7 @@ class at_cmd_rw : public at_cmd {
 class at_cmd_ro : public at_cmd_rw {
    public:
       virtual int run(xbsh_state * state, std::string);
+      virtual ~at_cmd_ro() {}
 
    protected:
       at_cmd_ro(std::string c) : at_cmd_rw(c) {}
@@ -84,6 +88,7 @@ class at_cmd_ro : public at_cmd_rw {
 class at_cmd_wo : public at_cmd_rw {
    public:
       virtual int run(xbsh_state * state, std::string);
+      virtual ~at_cmd_wo() {}
 
    protected:
       at_cmd_wo(std::string c) : at_cmd_rw(c) {}
@@ -93,6 +98,7 @@ class at_cmd_debug : public at_cmd_rw {
    public:
       virtual std::list<std::string> get_completions(std::string prefix);
       at_cmd_debug() : at_cmd_rw("") {}
+      virtual ~at_cmd_debug() {}
 
    protected:
       virtual int read(xbsh_state * state);
@@ -106,6 +112,7 @@ class at_cmd_enum : public at_cmd_rw {
 
    public:
       at_cmd_enum(std::string c, int n, ...);
+      virtual ~at_cmd_enum() {}
       virtual std::list<std::string> get_completions(std::string prefix);
 
    protected:
@@ -125,6 +132,7 @@ class at_cmd_flags : public at_cmd_rw {
 
    public:
       at_cmd_flags(std::string c, int n, ...);
+      virtual ~at_cmd_flags() {}
       virtual std::list<std::string> get_completions(std::string prefix);
 
    protected:
@@ -145,6 +153,7 @@ class at_cmd_scaled : public at_cmd_rw {
    public:
       at_cmd_scaled(std::string cmd, int bytes, int low, int high,
             double scale, std::string units, std::string flavor);
+      virtual ~at_cmd_scaled() {}
       virtual std::list<std::string> get_completions(std::string prefix);
 
    protected:
@@ -156,6 +165,7 @@ class at_cmd_scaled : public at_cmd_rw {
 class at_cmd_simple : public at_cmd {
    public:
       at_cmd_simple(std::string cmd) : at_cmd(cmd) {}
+      virtual ~at_cmd_simple() {}
       virtual int run(xbsh_state * state, std::string arg);
 };
 
@@ -167,6 +177,7 @@ class at_cmd_ro_hex : public at_cmd_ro {
    public:
       at_cmd_ro_hex(std::string at, std::string f, int l) : 
         at_cmd_ro(at), flavor(f), len(l) {}
+      virtual ~at_cmd_ro_hex() {}
 
       virtual int read(xbsh_state * state);
 };

@@ -30,6 +30,7 @@ class api_frame {
       api_frame( uint8_t t, uint8_t i, uint8_t s, std::string c,
           std::vector<uint8_t> d ) : 
         type(t), id(i), status(s), command(c), data(d) {}
+      virtual ~api_frame() {}
 
       uint8_t get_type() { return type; }
       uint8_t get_id() { return id; }
@@ -51,6 +52,7 @@ class api_remote_frame : public api_frame {
       api_remote_frame( uint8_t t, uint8_t i, uint8_t s, std::string c,
           xbee_addr so, xbee_net n, std::vector<uint8_t> d ) :
         api_frame(t, i, s, c, d), source(so), net(n) {}
+      virtual ~api_remote_frame() {}
       xbee_addr get_source() { return source; }
       xbee_net get_net() { return net; }
 
