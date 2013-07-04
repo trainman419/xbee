@@ -106,11 +106,12 @@ class at_cmd_enum : public at_cmd_rw {
 
    public:
       at_cmd_enum(std::string c, int n, ...);
+      virtual std::list<std::string> get_completions(std::string prefix);
 
+   protected:
       virtual int read_frame(xbsh_state * state, api_frame * ret);
       virtual std::vector<uint8_t> write_frame(xbsh_state * state, 
             std::string arg);
-      virtual std::list<std::string> get_completions(std::string prefix);
 };
 
 class at_cmd_flags : public at_cmd_rw {
@@ -124,10 +125,32 @@ class at_cmd_flags : public at_cmd_rw {
 
    public:
       at_cmd_flags(std::string c, int n, ...);
-
-      virtual int read_frame(xbsh_state * state, api_frame * ret);
-      virtual std::vector<uint8_t> write_frame(xbsh_state * state, std::string arg);
       virtual std::list<std::string> get_completions(std::string prefix);
+
+   protected:
+      virtual int read_frame(xbsh_state * state, api_frame * ret);
+      virtual std::vector<uint8_t> write_frame(xbsh_state * state,
+            std::string arg);
+};
+
+class at_cmd_scaled : public at_cmd_rw {
+   private:
+      int bytes;
+      int low;
+      int high;
+      double scale;
+      std::string units;
+      std::string flavor;
+
+   public:
+      at_cmd_scaled(std::string cmd, int bytes, int low, int high,
+            double scale, std::string units, std::string flavor);
+      virtual std::list<std::string> get_completions(std::string prefix);
+
+   protected:
+      virtual int read_frame(xbsh_state * state, api_frame * ret);
+      virtual std::vector<uint8_t> write_frame(xbsh_state * state,
+            std::string arg);
 };
 
 class at_cmd_simple : public at_cmd {

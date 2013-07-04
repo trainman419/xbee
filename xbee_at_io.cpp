@@ -142,10 +142,13 @@ command ** io() {
    *r++ = new command_child( "AD3",      dio3);
 
    // other configurataion options
-   *r++ = new command_child( "sample-rate",      fake_cmd);
+   *r++ = new command_child( "sample-rate", new at_cmd_scaled("IR", 2, 0x32, 
+            0xFFFF, 1.0, "ms", "Sample rate")); // TODO: set 0 to mean off
    *r++ = new command_child( "change-detection", fake_cmd);
-   *r++ = new command_child( "led-blink-time",   fake_cmd);
-   *r++ = new command_child( "RSSI-PWM",         fake_cmd);
+   *r++ = new command_child( "led-blink-time", new at_cmd_scaled("LT", 1, 0x0A,
+            0xFF, 10.0, "ms", "LED blink time")); // TODO: set 0 to mean default
+   *r++ = new command_child( "RSSI-PWM", new at_cmd_scaled("RP", 1, 0, 0xFF,
+            100.0, "ms", "RSSI PWM")); // TODO: set 0xFF to mean always-on
    *r++ = new command_child( "temperature",      fake_cmd);
    *r++ = new command_child( "force-sample", new at_cmd_sample() );
    *r++ = 0;

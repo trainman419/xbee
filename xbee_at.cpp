@@ -375,6 +375,49 @@ int at_cmd_simple::run(xbsh_state * state, std::string arg) {
    }
 }
 
+at_cmd_scaled::at_cmd_scaled(std::string cmd, int bytes, int low, int high,
+      double scale, std::string units, std::string flavor) : at_cmd_rw(cmd),
+   bytes(bytes), low(low), high(high), scale(scale), units(units),
+   flavor(flavor) {
+}
+
+std::list<std::string> at_cmd_scaled::get_completions(std::string prefix) {
+   std::list<std::string> res;
+   return res;
+}
+
+int at_cmd_scaled::read_frame(xbsh_state * state, api_frame * ret) {
+   std::vector<uint8_t> data = ret->get_data();
+   if( data.size() == bytes ) {
+      uint32_t raw_data = 0;
+      for( int i=0; i<bytes; ++i ) {
+         raw_data <<= 8;
+         raw_data |= data[i];
+      }
+      double scaled_data = raw_data * scale;
+      printf("%s: %.lf %s\n", flavor.c_str(), scaled_data, units.c_str());
+      return 0;
+   } else {
+      printf("Expected %d bytes; got %zd\n", bytes, data.size());
+      return 1;
+   }
+}
+
+std::vector<uint8_t> at_cmd_scaled::write_frame(xbsh_state * state, 
+      std::string arg) {
+   std::vector<uint8_t> ret;
+   double value = 0;
+   if( sscanf(arg.c_str(), "%lf", &value) == 1 ) {
+      //ret.ensure(bytes);
+      uint32_t raw_data = value / scale;
+      if( state->debug ) printf("Raw value: %X\n", raw_data);
+      for( int i=0; i<bytes; ++i ) {
+         ret.push_back( (raw_data >> i) & 0xFF );
+      }
+   }
+   return ret;
+}
+
 class at_cmd_fw : public at_cmd_ro {
    public:
       at_cmd_fw() : at_cmd_ro("VR") {};
