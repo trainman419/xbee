@@ -60,7 +60,7 @@ int count_escapes(int sz, char * data) {
 packet wrap1(char type, char * data, int sz) {
    int i;
 
-   char * tmp = malloc(sz + 1);
+   char * tmp = (char*)malloc(sz + 1);
    
    tmp[0] = type;
    for( i = 0; i < sz; i++ ) {
@@ -80,7 +80,7 @@ packet at(char * data, int sz) {
    cnt++;
    int i;
 
-   char * tmp = malloc(sz + 2);
+   char * tmp = (char*)malloc(sz + 2);
    
    tmp[0] = API_AT;;
    tmp[1] = cnt;

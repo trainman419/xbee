@@ -5,10 +5,6 @@
 #ifndef XBEE_API_H
 #define XBEE_API_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * API mode: AP = 2, API with escaped characters
  *
@@ -85,10 +81,5 @@ packet at_queue(char * data, int data_sz);
 /* remote AT */
 packet remote_at(xbee_addr addr, xbee_net net, char * data, int data_sz);
 /* not sure if there's a remote AT queue; skipping for now */
-
-#ifdef __cplusplus
-}
-#endif
-
 
 #endif

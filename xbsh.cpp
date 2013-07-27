@@ -59,7 +59,7 @@ int main(int argc, char ** argv) {
          int output_sz = 2;
          if( strlen(data) > 3 ) {
             int param;
-            output = malloc(strlen(data));
+            output = (char*)malloc(strlen(data));
             output[0] = data[1];
             output[1] = data[2];
             sscanf(data + 3, "%d", &param);
