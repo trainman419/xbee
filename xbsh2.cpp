@@ -256,6 +256,9 @@ void xbsh_state::operator()() {
                         }
                      }
                      break;
+                  case API_IO_RX:
+                     printf("Got remote sample packet\n");
+                     break;
                   default:
                      printf("Unknown response type %X\n", type);
                      break;
