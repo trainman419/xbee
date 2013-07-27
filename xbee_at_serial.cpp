@@ -43,7 +43,8 @@ command ** serial_c() {
             0, "1",
             1, "2"
             ));
-   *r++ = new command_child( "packetization-timeout", fake_cmd);
+   *r++ = new command_child( "packetization-timeout", new at_cmd_scaled("RO",
+            1, 0, 0xFF, 1, "character times", "Packetization timeout"));
    *r++ = new command_child( "DIO6", new at_cmd_enum("D7", 7,
             0, "disabled",
             1, "cts",

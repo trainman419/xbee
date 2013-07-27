@@ -7,7 +7,8 @@ command ** rf_scan() {
    *r++ = new command_child( "channels", new at_cmd_flags("SC", 16,
             "0x0B", "0x0C", "0x0D", "0x0E", "0x0F", "0x10", "0x11", "0x12",
             "0x13", "0x14", "0x15", "0x16", "0x17", "0x18", "0x19", "0x1A"));
-   *r++ = new command_child( "duration", fake_cmd );
+   *r++ = new command_child( "duration", new at_cmd_scaled("SD", 1, 0, 7,
+            1, "", "Scan duration (channels * (2 ^ duration) * 15.36ms)"));
    *r++ = 0;
    return result;
 }
