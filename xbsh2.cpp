@@ -59,7 +59,7 @@
 //
 
 xbsh_state::xbsh_state(std::string port, int baud ) :
-   serial(port, baud, serial::Timeout(100, 1000, 0)),
+   serial(port, baud, serial::Timeout(10, 100, 0)),
    read_thread_done(false), debug(1), read_thread(boost::ref(*this)),
    partial(), remotes(), received_frames(), received_frames_mutex(),
    received_frames_cond()
