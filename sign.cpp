@@ -18,7 +18,7 @@
 
 #define TRIES 10
 
-int serial_open(char * device);
+int serial_open(const char * device);
 
 int main(int argc, char ** argv) {
    xbee_addr addr;
@@ -38,7 +38,7 @@ int main(int argc, char ** argv) {
    net.c_net[1] = 0xFE;
 
    /* default device /dev/ttyUSB0 */
-   char * dev = "/dev/ttyUSB0";
+   const char * dev = "/dev/ttyUSB0";
    int ser = serial_open(dev);
 
    if( ser < 0 ) return -1;
@@ -123,7 +123,7 @@ int main(int argc, char ** argv) {
 }
 
 /* open a serial port and set baud rate to 115200 */
-int serial_open(char * device) {
+int serial_open(const char * device) {
    int ser;
    struct termios newtio;
 
