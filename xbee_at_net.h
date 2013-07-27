@@ -3,8 +3,8 @@
 //  net short address (ATMY)
 //  net short parent  (ATMP)
 //
-//  net ID node (ATNI)
-//  net ID cluster (ATCI)
+//  net node-id (ATNI)
+//  net ID cluster (ATCI) (AT mode only)
 //
 //  net max-hops unicast (ATNH)
 //  net max-hops broadcast (ATBH)

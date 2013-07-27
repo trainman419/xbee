@@ -1,6 +1,8 @@
 
 #include "xbee_at_cmd.h"
 
+#include <boost/foreach.hpp>
+
 class at_cmd_serial : public at_cmd_ro {
    public:
       at_cmd_serial() : at_cmd_ro("") {}
@@ -42,20 +44,43 @@ class at_cmd_serial : public at_cmd_ro {
       }
 };
 
+class at_cmd_ni : public at_cmd_rw {
+   public:
+      at_cmd_ni() : at_cmd_rw("NI") {}
+
+   protected:
+      virtual int read_frame(xbsh_state * state, api_frame * ret) {
+         std::vector<uint8_t> data = ret->get_data();
+         std::string out;
+         out.reserve(data.size());
+         BOOST_FOREACH(uint8_t c, data) {
+            out.push_back(c);
+         }
+         printf("Node Idnetifier: %s\n", out.c_str());
+         return 0;
+      }
+
+      virtual std::vector<uint8_t> write_frame(xbsh_state * state,
+            std::string arg) {
+         std::vector<uint8_t> ret;
+         if( arg.length() <= 20 ) {
+            ret.reserve(arg.length());
+            BOOST_FOREACH(uint8_t c, arg) {
+               ret.push_back(c);
+            }
+         } else {
+            printf("Error: node identifier cannot be more "
+                   "than 20 characters\n");
+         }
+         return ret;
+      }
+};
+
 command ** net_short() {
    command ** result = new command*[3];
    command ** r = result;
    *r++ = new command_child( "address", new at_cmd_ro_hex("MY", "16-bit network address", 2) );
    *r++ = new command_child( "parent",  new at_cmd_ro_hex("MP", "16-bit parent address", 2) );
-   *r++ = 0;
-   return result;
-};
-
-command ** net_id() {
-   command ** result = new command*[3];
-   command ** r = result;
-   *r++ = new command_child( "node",    fake_cmd );
-   *r++ = new command_child( "cluster", fake_cmd );
    *r++ = 0;
    return result;
 };
@@ -101,12 +126,12 @@ command ** net() {
    command ** result = new command*[11];
    command ** r = result;
    *r++ = new command_parent( "short",          net_short() );
-   *r++ = new command_parent( "ID",             net_id()    );
    *r++ = new command_parent( "max-hops",       net_max()   );
    *r++ = new command_parent( "PAN-ID",         net_pan()   );
    *r++ = new command_parent( "node-discovery", net_node()  );
    *r++ = new command_parent( "join",           net_join()  );
 
+   *r++ = new command_child( "node-id", new at_cmd_ni() );
    *r++ = new command_child( "max-payload", fake_cmd );
    *r++ = new command_child( "destination", fake_cmd );
    *r++ = new command_child( "children",    fake_cmd );
