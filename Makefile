@@ -1,6 +1,6 @@
 CFLAGS=-g
 CXXFLAGS=-g -Weffc++
-LDLIBS=-lreadline -lserial -lboost_thread
+LDLIBS=-lreadline -lserial -lboost_thread-mt -lboost_system-mt
 LINK.o=$(CXX)
 
 TARGETS=xbsh sign xbsh2 prefix_map_test
