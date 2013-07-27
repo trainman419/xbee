@@ -99,7 +99,7 @@ class io_sample {
          public:
             uint8_t channel;
             uint16_t data;
-            analog(uint8_t c, uint8_t d) : channel(c), data(d) {}
+            analog(uint8_t c, uint16_t d) : channel(c), data(d) {}
       };
 
       io_sample(std::vector<uint8_t> data);
