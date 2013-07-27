@@ -219,45 +219,73 @@ void xbsh_state::operator()() {
                      }
                      break;
                   case API_REMOTE_AT_RESP:
-                     {
-                        if( len < 15 ) {
-                           printf("Remote API response too short: %d\n", len);
-                           // TODO: ?
-                        } else {
-                           xbee_addr source;
-                           source.c_addr[0] = data[12];
-                           source.c_addr[1] = data[11];
-                           source.c_addr[2] = data[10];
-                           source.c_addr[3] = data[9];
-                           source.c_addr[4] = data[8];
-                           source.c_addr[5] = data[7];
-                           source.c_addr[6] = data[6];
-                           source.c_addr[7] = data[5];
-                           xbee_net net;
-                           net.c_net[0] = data[14];
-                           net.c_net[1] = data[13];
-                           std::string command;
-                           command.push_back(data[15]);
-                           command.push_back(data[16]);
-                           uint8_t status = data[17];
-                           std::vector<uint8_t> d(len - 15);
-                           for( int i=0; i<len-15; i++ ) {
-                              d[i] = data[i+18];
-                           }
-                           // lock output array and append
-                           api_frame * f = new api_remote_frame(type, id,
-                                 status, command, source, net, d);
-                           {
-                              boost::mutex::scoped_lock lock(
-                                    received_frames_mutex);
-                              received_frames.push_back(f);
-                           }
-                           received_frames_cond.notify_one();
+                     if( len < 15 ) {
+                        printf("Remote API response too short: %d\n", len);
+                        // TODO: ?
+                     } else {
+                        xbee_addr source;
+                        source.c_addr[0] = data[12];
+                        source.c_addr[1] = data[11];
+                        source.c_addr[2] = data[10];
+                        source.c_addr[3] = data[9];
+                        source.c_addr[4] = data[8];
+                        source.c_addr[5] = data[7];
+                        source.c_addr[6] = data[6];
+                        source.c_addr[7] = data[5];
+                        xbee_net net;
+                        net.c_net[0] = data[14];
+                        net.c_net[1] = data[13];
+                        std::string command;
+                        command.push_back(data[15]);
+                        command.push_back(data[16]);
+                        uint8_t status = data[17];
+                        std::vector<uint8_t> d(len - 15);
+                        for( int i=0; i<len-15; i++ ) {
+                           d[i] = data[i+18];
                         }
+                        // lock output array and append
+                        api_frame * f = new api_remote_frame(type, id,
+                              status, command, source, net, d);
+                        {
+                           boost::mutex::scoped_lock lock(
+                                 received_frames_mutex);
+                           received_frames.push_back(f);
+                        }
+                        received_frames_cond.notify_one();
                      }
                      break;
                   case API_IO_RX:
-                     printf("Got remote sample packet\n");
+                     if( len < 16 ) {
+                        printf("Remote sample too short: %d\n", len);
+                     } else {
+                        xbee_addr source;
+                        source.c_addr[0] = data[11];
+                        source.c_addr[1] = data[10];
+                        source.c_addr[2] = data[9];
+                        source.c_addr[3] = data[8];
+                        source.c_addr[4] = data[7];
+                        source.c_addr[5] = data[6];
+                        source.c_addr[6] = data[5];
+                        source.c_addr[7] = data[4];
+                        xbee_net net;
+                        net.c_net[0] = data[13];
+                        net.c_net[1] = data[12];
+                        uint8_t options = data[14];
+                        std::vector<uint8_t> d(len - 12);
+                        for( int i=0; i<len-12; i++ ) {
+                           d[i] = data[i+15];
+                        }
+                        io_sample sample(d);
+                        printf("Got remote sample packet\n");
+                        BOOST_FOREACH( const io_sample::digital di, 
+                              sample.get_digital() ) {
+                           printf("DIO%d: %d\n", di.channel, di.data);
+                        }
+                        BOOST_FOREACH( const io_sample::analog a,
+                              sample.get_analog() ) {
+                           printf("AD%d: %d\n", a.channel, a.data);
+                        }
+                     }
                      break;
                   default:
                      printf("Unknown response type %X\n", type);
