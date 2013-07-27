@@ -5,6 +5,10 @@
 #ifndef XBEE_API_H
 #define XBEE_API_H
 
+#include <stdint.h>
+#include <list>
+#include <vector>
+
 /*
  * API mode: AP = 2, API with escaped characters
  *
@@ -81,5 +85,31 @@ packet at_queue(char * data, int data_sz);
 /* remote AT */
 packet remote_at(xbee_addr addr, xbee_net net, char * data, int data_sz);
 /* not sure if there's a remote AT queue; skipping for now */
+
+class io_sample {
+   public:
+      class digital {
+         public:
+            uint8_t channel;
+            uint8_t data;
+            digital(uint8_t c, uint8_t d) : channel(c), data(d) {}
+      };
+
+      class analog {
+         public:
+            uint8_t channel;
+            uint16_t data;
+            analog(uint8_t c, uint8_t d) : channel(c), data(d) {}
+      };
+
+      io_sample(std::vector<uint8_t> data);
+
+      const std::list<digital> & get_digital() const {return digital_samples;}
+      const std::list<analog> & get_analog() const { return analog_samples; }
+
+   private:
+      std::list<digital> digital_samples;
+      std::list<analog>  analog_samples;
+};
 
 #endif

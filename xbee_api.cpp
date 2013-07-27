@@ -257,3 +257,37 @@ void print_packet(packet p) {
          break;
    }
 }
+
+io_sample::io_sample(std::vector<uint8_t> data) : digital_samples(),
+   analog_samples()
+{
+   uint8_t sets = data[0];
+   uint16_t digital_mask = (data[1] << 8) | data[2];
+   uint8_t analog_mask = data[3];
+   uint16_t digital_data = 0;
+   int i = 4;
+   if( digital_mask ) {
+      digital_data = data[i++];
+      digital_data <<= 8;
+      digital_data |= data[i++];
+      for( int j=0; j<13; j++ ) {
+         if( (1<<j) & digital_mask ) {
+            digital_samples.push_back(digital(j, (digital_data & (1<<j))>>j));
+         }
+      }
+   }
+   for( int j=0; j<4; j++ ) {
+      if( (1<<j) & analog_mask ) {
+         uint16_t a = data[i++];
+         a <<= 8;
+         a |= data[i++];
+         analog_samples.push_back(analog(j, a));
+      }
+   }
+   if( (1<<7) & analog_mask ) {
+      uint16_t a = data[i++];
+      a <<= 8;
+      a |= data[i++];
+      analog_samples.push_back(analog(7, a));
+   }
+}
