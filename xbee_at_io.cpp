@@ -55,7 +55,8 @@ command ** io() {
             5, "on"));
 
    // DIO
-   at_cmd * dio0 = new at_cmd_enum("D0", 5, 
+   at_cmd * dio0 = new at_cmd_enum("D0", 6,
+         0, "disabled",
          1, "comissioning",
          2, "analog-in",
          3, "digital-in",
