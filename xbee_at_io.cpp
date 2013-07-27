@@ -111,11 +111,15 @@ command ** io() {
             5, "on"));
 
    // DIO6-7 are serial
+
+   /* D8 is not yet supported 
    *r++ = new command_child( "D8",    new at_cmd_enum("D8", 4,
             0, "disabled",
             3, "digital-in",
             4, "off",
             5, "on"));
+            */
+
    // DIO9-10 are serial
    *r++ = new command_child( "D11",    new at_cmd_enum("P1", 4,
             0, "disabled",

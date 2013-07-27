@@ -60,7 +60,7 @@
 
 xbsh_state::xbsh_state(std::string port, int baud ) :
    serial(port, baud, serial::Timeout(100, 1000, 0)),
-   read_thread_done(false), debug(0),
+   read_thread_done(false), debug(1),
    read_thread(boost::ref(*this))
 {
 }
@@ -110,6 +110,16 @@ void xbsh_state::send_AT(std::string at_str, std::vector<uint8_t> data) {
    free(d);
 }
 
+void xbsh_state::hardreset() {
+   serial.setDTR(false);
+   serial.setRTS(false);
+
+   sleep(1);
+
+   serial.setDTR(true);
+   serial.setRTS(true);
+}
+
 void xbsh_state::operator()() {
    std::vector<uint8_t> raw_data;
 
@@ -119,7 +129,7 @@ void xbsh_state::operator()() {
       serial.read(tmp_data, 64);
       if( tmp_data.size() > 0 ) {
          if( debug ) {
-            printf("RX:");
+            printf("RX:    ");
             for( int i=0; i<tmp_data.size(); i++ ) {
                printf(" %02X", tmp_data[i]);
             }
@@ -159,7 +169,7 @@ void xbsh_state::operator()() {
          raw_data.erase(raw_data.begin(), raw_data.begin()+i);
 
          if( debug ) {
-            printf("RX:");
+            printf("Packet:");
             for( i=0; i<data.size(); ++i ) {
                printf(" %02X", data[i]);
             }

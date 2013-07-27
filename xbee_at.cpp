@@ -187,7 +187,7 @@ int at_cmd_debug::write(xbsh_state * state, std::string arg) {
       state->debug = 1;
       printf("debuging on\n");
       return 0;
-   } else if( arg == "off" ) {
+   } else if( arg == "off" || arg == "of" ) {
       state->debug = 0;
       printf("debugging off\n");
       return 0;
@@ -394,6 +394,7 @@ int at_cmd_scaled::read_frame(xbsh_state * state, api_frame * ret) {
          raw_data <<= 8;
          raw_data |= data[i];
       }
+      if( state->debug) printf("Raw value %d (0x%X)\n", raw_data, raw_data);
       double scaled_data = raw_data * scale;
       printf("%s: %.lf %s\n", flavor.c_str(), scaled_data, units.c_str());
       return 0;
@@ -410,9 +411,9 @@ std::vector<uint8_t> at_cmd_scaled::write_frame(xbsh_state * state,
    if( sscanf(arg.c_str(), "%lf", &value) == 1 ) {
       //ret.ensure(bytes);
       uint32_t raw_data = value / scale;
-      if( state->debug ) printf("Raw value: %X\n", raw_data);
-      for( int i=0; i<bytes; ++i ) {
-         ret.push_back( (raw_data >> i) & 0xFF );
+      if( state->debug ) printf("Raw value: %d (0x%X)\n", raw_data, raw_data);
+      for( int i=bytes-1; i>=0; --i ) {
+         ret.push_back( (raw_data >> (i*8)) & 0xFF );
       }
    }
    return ret;
@@ -457,6 +458,20 @@ class at_cmd_fw : public at_cmd_ro {
             printf("Got %zd bytes; expected 2\n", data.size());
             return 1;
          }
+      }
+};
+
+class cmd_hardreset : public at_cmd {
+   public:
+      cmd_hardreset() : at_cmd("") {}
+
+      int run(xbsh_state * state, std::string arg) {
+         if( arg.length() > 0 ) {
+            printf("Hardreset does not take any arguments\n");
+            return 1;
+         }
+         state->hardreset();
+         return 0;
       }
 };
 
@@ -525,9 +540,11 @@ command ** at_c() {
 
 command ** reset_c() {
    command ** r = new command*[4];
-   r[0] = new command_child( "network", fake_cmd );
-   r[1] = new command_child( "soft",    fake_cmd );
-   r[2] = new command_child( "hard",    fake_cmd );
+
+   // TODO: pass the proper parameters to network reset
+   r[0] = new command_child( "network", new at_cmd_simple("NR"));
+   r[1] = new command_child( "soft", new at_cmd_simple("FR"));
+   r[2] = new command_child( "hard", new cmd_hardreset() );
    r[3] = 0;
    return r;
 }

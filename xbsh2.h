@@ -94,6 +94,9 @@ class xbsh_state {
       // receive AT command
       api_frame * read_AT();
 
+      // hard-reset with the control lines
+      void hardreset();
+
       // push and pop the remote address stack
       void push_remote(xbee_addr remote) { remotes.push_back(remote); }
       const std::list<xbee_addr> get_remotes() { return remotes; }
