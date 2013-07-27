@@ -136,6 +136,7 @@ class at_cmd_flags : public at_cmd_rw {
 };
 
 class at_cmd_scaled : public at_cmd_rw {
+   // TODO: add provision for sentry values
    private:
       int bytes;
       int low;

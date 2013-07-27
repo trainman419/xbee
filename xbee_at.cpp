@@ -386,6 +386,12 @@ at_cmd_scaled::at_cmd_scaled(std::string cmd, int bytes, int low, int high,
 
 std::list<std::string> at_cmd_scaled::get_completions(std::string prefix) {
    std::list<std::string> res;
+   // TODO: ability to tab-complete numerical values
+   //    consider:
+   //       limits and scaling
+   //       discretization
+   //       units
+   // readline may get in our way here...
    return res;
 }
 

@@ -420,6 +420,13 @@ char ** xbsh_attempt_completion_func(const char * text, int start, int end) {
       std::list<std::string> completions = c->get_completions(text);
 
       if( completions.size() == 1 ) {
+         // TODO: conditionally append space on certain versions of readline
+         //  this appears to be necessary on OS X 10.8
+         //    NetBSD readline 1.30
+         //  not necessary on my gentoo machine
+         //    readline 6.2; defines RL_VERSION_(MAJOR|MINOR) macros
+         //  this _may_ be a flag that can be set in readline somewhere...
+         //    related to the bash complte -o nospace option
          char ** result = (char**)malloc(sizeof(char*) * 2);
          std::string comp = completions.front();
          int len = comp.length();
