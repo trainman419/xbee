@@ -276,14 +276,15 @@ void xbsh_state::operator()() {
                            d[i] = data[i+15];
                         }
                         io_sample sample(d);
-                        printf("Got remote sample packet\n");
+                        printf("Remote sample from %s\n", 
+                              print_addr(source).c_str());
                         BOOST_FOREACH( const io_sample::digital di, 
                               sample.get_digital() ) {
-                           printf("DIO%d: %d\n", di.channel, di.data);
+                           printf("  DIO%d: %d\n", di.channel, di.data);
                         }
                         BOOST_FOREACH( const io_sample::analog a,
                               sample.get_analog() ) {
-                           printf("AD%d: %d\n", a.channel, a.data);
+                           printf("  AD%d: %d\n", a.channel, a.data);
                         }
                      }
                      break;
