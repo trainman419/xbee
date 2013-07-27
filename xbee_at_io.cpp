@@ -137,7 +137,9 @@ command ** io() {
    // other configurataion options
    *r++ = new command_child( "sample-rate", new at_cmd_scaled("IR", 2, 0x32, 
             0xFFFF, 1.0, "ms", "Sample rate")); // TODO: set 0 to mean off
-   *r++ = new command_child( "change-detection", fake_cmd);
+   *r++ = new command_child( "change-detection", new at_cmd_flags("IC", 12,
+            "D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8",
+            "D9", "D10", "D11"));
    *r++ = new command_child( "led-blink-time", new at_cmd_scaled("LT", 1, 0x0A,
             0xFF, 10.0, "ms", "LED blink time")); // TODO: set 0 to mean default
    *r++ = new command_child( "RSSI-PWM", new at_cmd_scaled("RP", 1, 0, 0xFF,

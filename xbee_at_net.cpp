@@ -88,8 +88,10 @@ command ** net_short() {
 command ** net_max() {
    command ** result = new command*[3];
    command ** r = result;
-   *r++ = new command_child( "unicast",   fake_cmd );
-   *r++ = new command_child( "broadcast", fake_cmd );
+   *r++ = new command_child( "unicast", new at_cmd_scaled("NH", 1, 0, 0xFF,
+            1, "hops", "Maximum unicast distance"));
+   *r++ = new command_child( "broadcast", new at_cmd_scaled("BH", 1, 0, 0x1E,
+            1, "hops", "Maximum broadcast distance"));
    *r++ = 0;
    return result;
 };
@@ -107,8 +109,10 @@ command ** net_pan() {
 command ** net_node() {
    command ** result = new command*[3];
    command ** r = result;
-   *r++ = new command_child( "timeout", fake_cmd );
-   *r++ = new command_child( "options", fake_cmd );
+   *r++ = new command_child( "timeout", new at_cmd_scaled("NT", 1, 0x20, 0xFF,
+            100, "ms", "Network discovery timeout"));
+   *r++ = new command_child( "options", new at_cmd_flags("NO", 2,
+            "device-type", "local-response"));
    *r++ = 0;
    return result;
 };
@@ -116,8 +120,10 @@ command ** net_node() {
 command ** net_join() {
    command ** result = new command*[3];
    command ** r = result;
-   *r++ = new command_child( "notification", fake_cmd );
-   *r++ = new command_child( "time",         fake_cmd );
+   *r++ = new command_child( "notification", new at_cmd_enum("JN", 2,
+            0, "off", 1, "on"));
+   *r++ = new command_child( "time", new at_cmd_scaled("NJ", 1, 0, 0xFF, 1,
+            "sec", "Node join time"));
    *r++ = 0;
    return result;
 };
