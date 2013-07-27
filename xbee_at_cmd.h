@@ -7,8 +7,6 @@
 #ifndef XBEE_AT_CMD_H
 #define XBEE_AT_CMD_H
 
-class command;
-
 #include "xbsh2.h"
 #include "xbee_at.h"
 #include "prefix_map.h"
@@ -28,6 +26,7 @@ class command {
       std::string name;
 
       command(std::string n, std::string h) : name(n), help(h) {}
+      command(command & other) : name(other.name), help(other.help) {}
 
    public:
       virtual int run(xbsh_state * state, std::string args) { return 0; }
@@ -63,6 +62,12 @@ class command_child : public command {
 
    public:
       command_child(std::string n, at_cmd * c) : command(n, "child"), cmd(c) {}
+
+      // not implemented, but make the compiler shut up
+      //  these will throw a link error if anyone tries to use them
+      command_child(command_child & other);
+      command_child & operator=(const command_child & other);
+
       virtual ~command_child() { delete cmd; }
 
       virtual int run(xbsh_state * state, std::string args);
@@ -73,5 +78,8 @@ class command_child : public command {
 extern at_cmd * fake_cmd;
 
 command * setup_commands();
+command ** diag();
+command ** at_c();
+command ** reset_c();
 
 #endif

@@ -12,10 +12,19 @@
 #include <string>
 #include <list>
 #include <queue>
+#include <boost/shared_ptr.hpp>
 
 template <class T> class prefix_map {
    public:
       prefix_map() : map(NULL) {}
+
+      prefix_map(const prefix_map<T> & other) : map(NULL) {
+         // TODO: deep copy of another map
+      }
+
+      prefix_map<T> & operator=(const prefix_map<T> & other) {
+         // TODO: delete and deep copy
+      }
 
       // get an object by prefix
       T * get(std::string prefix) {
@@ -220,6 +229,19 @@ template <class T> class prefix_map {
       class prefix_obj {
          public:
             prefix_obj(std::string & n, T * o) : name(n), obj(o) {}
+            prefix_obj(const prefix_obj & other) : name(other.name),
+               obj(other.obj) {}
+
+            prefix_obj & operator=(const prefix_obj & other) {
+               if( this == &other )
+                  return *this;
+
+               name = other.name;
+               obj = other.obj;
+
+               return *this;
+            }
+
             std::string name;
             T * obj;
       };

@@ -7,6 +7,7 @@
  */
 
 #include "xbee_at.h"
+#include "xbee_at_cmd.h"
 
 #include <boost/foreach.hpp>
 
@@ -197,7 +198,8 @@ int at_cmd_debug::write(xbsh_state * state, std::string arg) {
    }
 }
 
-at_cmd_enum::at_cmd_enum(std::string c, int n, ...) : at_cmd_rw(c) {
+at_cmd_enum::at_cmd_enum(std::string c, int n, ...) : at_cmd_rw(c),
+      values(), keys() {
    va_list vl;
    int idx;
    char * val;
@@ -261,7 +263,8 @@ std::list<std::string> at_cmd_flags::split(std::string in) {
    return res;
 }
 
-at_cmd_flags::at_cmd_flags(std::string c, int n, ...) : at_cmd_rw(c) {
+at_cmd_flags::at_cmd_flags(std::string c, int n, ...) : at_cmd_rw(c),
+      keys(), values() {
    va_list vl;
    int idx = 1;
    char * val;

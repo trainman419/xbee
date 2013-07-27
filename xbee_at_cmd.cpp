@@ -57,7 +57,7 @@ at_cmd * fake_cmd = new fake_at_cmd();
 //  asynchronous responses (handle as "no response")
 
 command_parent::command_parent(std::string n, command ** sub) :
-   command(n, "parent")
+   command(n, "parent"), subcommands()
 {
    if( sub ) {
       for( int i = 0; sub[i]; i++ ) {

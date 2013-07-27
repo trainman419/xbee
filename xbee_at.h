@@ -35,16 +35,10 @@
 #ifndef XBEE_AT_H
 #define XBEE_AT_H
 
-class at_cmd;
-
 #include "xbsh2.h"
-#include "xbee_at_cmd.h"
 #include "prefix_map.h"
 
 #include <string>
-
-// get the AT command for a given string
-//typedef std::string (*command_at)(std::string args);
 
 class at_cmd {
    protected:
@@ -184,9 +178,5 @@ class at_cmd_ro_hex : public at_cmd_ro {
 
 xbee_addr parse_addr(std::string addr);
 std::string print_addr(xbee_addr addr);
-
-command ** diag();
-command ** at_c();
-command ** reset_c();
 
 #endif
