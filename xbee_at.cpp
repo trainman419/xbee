@@ -484,6 +484,33 @@ class cmd_hardreset : public at_cmd {
       }
 };
 
+class at_cmd_char : public at_cmd_rw {
+   public:
+      at_cmd_char() : at_cmd_rw("CC") {}
+
+   protected:
+      int read_frame(xbsh_state * state, api_frame * ret) {
+         std::vector<uint8_t> data = ret->get_data();
+         if( data.size() == 1 ) {
+            printf("Command character: '%c'\n", data[0]);
+            return 0;
+         } else {
+            printf("Expected 1 byte; got %zd\n", data.size());
+            return -1;
+         }
+      }
+
+      std::vector<uint8_t> write_frame(xbsh_state * state, std::string arg) {
+         std::vector<uint8_t> ret;
+         if( arg.length() == 1 ) {
+            ret.push_back(arg[0]);
+         } else if( arg.length() > 1 ) {
+            printf("Please specify only one command character\n");
+         }
+         return ret;
+      }
+};
+
 std::string print_addr(xbee_addr addr) {
    std::string res;
    for( int i=0; i<8; i++ ) {
@@ -543,7 +570,7 @@ std::list<command*> at_c() {
                2, 0x028F, 100.0, "ms", "Command mode timeout") ));
    res.push_back(new command_child( "guard-time", new at_cmd_scaled("GT", 2, 1,
                0x0CE4, 1, "ms", "Guard time")));
-   res.push_back(new command_child( "command-character", fake_cmd ));
+   res.push_back(new command_child( "command-character", new at_cmd_char() ));
    return res;
 }
 
