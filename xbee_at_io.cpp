@@ -32,7 +32,8 @@ class at_cmd_sample : public at_cmd_ro {
 
 std::list<command*> io_voltage() {
    std::list<command*> res;
-   res.push_back(new command_child( "supply",     fake_cmd));
+   res.push_back(new command_child( "read", new at_cmd_scaled_ro("%V", 2, 
+               1200.0/1024.0, "mV", "Supply Voltage")));
    res.push_back(new command_child( "monitoring", fake_cmd));
    return res;
 };
@@ -141,7 +142,8 @@ std::list<command*> io() {
             0xFF, 10.0, "ms", "LED blink time"))); // TODO: set 0 to mean default
    res.push_back(new command_child( "RSSI-PWM", new at_cmd_scaled("RP", 1, 0, 0xFF,
             100.0, "ms", "RSSI PWM"))); // TODO: set 0xFF to mean always-on
-   res.push_back(new command_child( "temperature",      fake_cmd));
+   res.push_back(new command_child( "temperature", new at_cmd_scaled_ro("TP", 2,
+               1, "C", "Temperature")));
    res.push_back(new command_child( "force-sample", new at_cmd_sample() ));
    return res;
 }

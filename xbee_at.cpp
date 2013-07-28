@@ -437,7 +437,7 @@ int at_cmd_scaled_ro::read_frame(xbsh_state * state, api_frame * ret) {
          raw_data |= data[i];
       }
       double scaled_data = raw_data * scale;
-      printf("%s: %f %s\n", flavor.c_str(), scaled_data, units.c_str());
+      printf("%s: %.lf %s\n", flavor.c_str(), scaled_data, units.c_str());
       return 0;
    } else {
       printf("Expected %d bytes, got %zd\n", bytes, data.size());
