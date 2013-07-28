@@ -224,7 +224,8 @@ std::list<command*> toplevel() {
    res.push_back(new command_child( "apply", new at_cmd_simple("AC") ));
    res.push_back(new command_child( "write", new at_cmd_simple("WR") ));
    res.push_back(new command_child( "defaults", new at_cmd_simple("RE") ));
-   res.push_back(new command_child( "device-type",      fake_cmd ));
+   res.push_back(new command_child( "device-type", new at_cmd_hex("DD", 4,
+               "Device Type") ));
    res.push_back(new command_child( "debug",  new at_cmd_debug() ));
    res.push_back(new command_child( "remote", new at_cmd_remote() ));
 

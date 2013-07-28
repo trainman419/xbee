@@ -133,7 +133,8 @@ std::list<command*> net() {
    res.push_back(new command_child( "node-id", new at_cmd_ni() ));
    res.push_back(new command_child( "max-payload", fake_cmd ));
    res.push_back(new command_child( "destination", fake_cmd ));
-   res.push_back(new command_child( "children",    fake_cmd ));
+   res.push_back(new command_child( "children", new at_cmd_scaled_ro("NC", 1,
+               1, "", "Remaining children")));
    res.push_back(new command_child( "serial", new at_cmd_serial() ));
    return res;
 };

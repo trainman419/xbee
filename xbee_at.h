@@ -164,6 +164,22 @@ class at_cmd_simple : public at_cmd {
       virtual int run(xbsh_state * state, std::string arg);
 };
 
+class at_cmd_hex : public at_cmd_rw {
+   private:
+      int len;
+      std::string flavor;
+
+   public:
+      at_cmd_hex(std::string cmd, int len, std::string f) : at_cmd_rw(cmd),
+         len(len), flavor(f) {}
+      virtual ~at_cmd_hex() {}
+
+   protected:
+      virtual int read_frame(xbsh_state * state, api_frame * ret);
+      virtual std::vector<uint8_t> write_frame(xbsh_state * state, 
+            std::string arg);
+};
+
 class at_cmd_ro_hex : public at_cmd_ro {
    private:
       std::string flavor;

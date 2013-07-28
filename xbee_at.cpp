@@ -96,6 +96,35 @@ int at_cmd_ro_hex::read(xbsh_state * state) {
    return 0;
 }
 
+int at_cmd_hex::read_frame(xbsh_state * state, api_frame * ret) {
+   std::vector<uint8_t> data = ret->get_data();
+   if( data.size() == len ) {
+      printf("%s: ", flavor.c_str());
+      for( int i=0; i<len; i++ ) {
+         printf("%02X", data[i]);
+      }
+      printf("\n");
+      return 0;
+   } else {
+      printf("Expected %d bytes, %zd bytes\n", len, data.size());
+      return 1;
+   }
+}
+
+std::vector<uint8_t> at_cmd_hex::write_frame(xbsh_state * state, 
+      std::string arg) {
+   uint32_t hex = 0;
+   std::vector<uint8_t> ret;
+   if( sscanf(arg.c_str(), "%X", &hex) == 1 ) {
+      for( int i=len-1; i>=0; --i ) {
+         ret.push_back(hex >> (i*8));
+      }
+   } else {
+      printf("Couldn't parse %s as hex\n", arg.c_str());
+   }
+   return ret;
+}
+
 class at_cmd_status : public at_cmd_ro {
    public:
       at_cmd_status() : at_cmd_ro("AI") {}

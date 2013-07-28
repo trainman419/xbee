@@ -34,7 +34,8 @@ std::list<command*> io_voltage() {
    std::list<command*> res;
    res.push_back(new command_child( "read", new at_cmd_scaled_ro("%V", 2, 
                1200.0/1024.0, "mV", "Supply Voltage")));
-   res.push_back(new command_child( "monitoring", fake_cmd));
+   res.push_back(new command_child( "threshold", new at_cmd_scaled("V+",
+               2, 0x0700, 0x0c00, 1200.0/1024.0, "mV", "Voltage Threshold")));
    return res;
 };
 
