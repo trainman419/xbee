@@ -16,7 +16,8 @@ std::list<command*> rf_power() {
    res.push_back(new command_child( "level", fake_cmd ));
    res.push_back(new command_child( "mode", new at_cmd_enum("PM", 2,
             0, "normal", 1, "boost")));
-   res.push_back(new command_child( "peak", fake_cmd ));
+   res.push_back(new command_child( "peak", new at_cmd_scaled_ro("PP", 1, 1.0,
+               "dBm", "Peak power")));
    return res;
 }
 
@@ -25,12 +26,14 @@ std::list<command*> rf() {
    res.push_back(new command_parent( "scan", rf_scan() ));
    res.push_back(new command_parent( "power", rf_power() ));
 
-   res.push_back(new command_child( "operating-channel", fake_cmd ));
+   res.push_back(new command_child( "operating-channel", new at_cmd_scaled_ro(
+               "CH", 1, 1, "", "Operating Channel")));
    res.push_back(new command_child( "channel-verification", new at_cmd_enum(
             "JV", 2, 0, "disabled", 1, "enabled")));
    res.push_back(new command_child( "zigbee-profile", new at_cmd_enum("ZS", 3,
             0, "0", 1, "1", 2, "2") ));
-   res.push_back(new command_child( "RSSI", fake_cmd ));
+   res.push_back(new command_child( "RSSI", new at_cmd_scaled_ro("DB", 1, -1,
+               "dBm", "Received signal strength")));
    return res;
 }
 

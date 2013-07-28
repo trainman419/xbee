@@ -177,6 +177,23 @@ class at_cmd_ro_hex : public at_cmd_ro {
       virtual int read(xbsh_state * state);
 };
 
+class at_cmd_scaled_ro : public at_cmd_ro {
+   private:
+      int bytes;
+      double scale;
+      std::string units;
+      std::string flavor;
+
+   public:
+      at_cmd_scaled_ro(std::string cmd, int bytes, double scale,
+            std::string units, std::string flavor) : at_cmd_ro(cmd),
+      bytes(bytes), scale(scale), units(units), flavor(flavor) {}
+      virtual ~at_cmd_scaled_ro() {}
+
+   protected:
+      virtual int read_frame(xbsh_state * state, api_frame * ret);
+};
+
 xbee_addr parse_addr(std::string addr);
 std::string print_addr(xbee_addr addr);
 

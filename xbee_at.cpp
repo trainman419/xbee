@@ -428,6 +428,23 @@ std::vector<uint8_t> at_cmd_scaled::write_frame(xbsh_state * state,
    return ret;
 }
 
+int at_cmd_scaled_ro::read_frame(xbsh_state * state, api_frame * ret) {
+   std::vector<uint8_t> data = ret->get_data();
+   if( data.size() == bytes ) {
+      uint32_t raw_data = 0;
+      for( int i=0; i < data.size(); i++ ) {
+         raw_data <<= 8;
+         raw_data |= data[i];
+      }
+      double scaled_data = raw_data * scale;
+      printf("%s: %f %s\n", flavor.c_str(), scaled_data, units.c_str());
+      return 0;
+   } else {
+      printf("Expected %d bytes, got %zd\n", bytes, data.size());
+      return 1;
+   }
+}
+
 class at_cmd_fw : public at_cmd_ro {
    public:
       at_cmd_fw() : at_cmd_ro("VR") {};
