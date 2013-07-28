@@ -56,13 +56,11 @@ at_cmd * fake_cmd = new fake_at_cmd();
 //  variable number of responses (null-terminated?)
 //  asynchronous responses (handle as "no response")
 
-command_parent::command_parent(std::string n, command ** sub) :
+command_parent::command_parent(std::string n, std::list<command*> cmds) :
    command(n, "parent"), subcommands()
 {
-   if( sub ) {
-      for( int i = 0; sub[i]; i++ ) {
-         subcommands.put(sub[i]->get_name(), sub[i]);
-      }
+   BOOST_FOREACH(command * c, cmds) {
+      subcommands.put(c->get_name(), c);
    }
 }
 
@@ -208,32 +206,29 @@ class at_cmd_remote : public at_cmd_rw {
       }
 };
 
-command ** toplevel() {
-   command ** result = new command*[19];
-   command ** r = result;
-   *r++ = new command_parent( "diagnostic", diag()    );
-   *r++ = new command_parent( "at",         at_c()    );
-   *r++ = new command_parent( "reset",      reset_c() );
-   *r++ = new command_parent( "io",         io()      );
-   *r++ = new command_parent( "encryption", enc()     );
-   *r++ = new command_parent( "net",        net()     );
-   *r++ = new command_parent( "rf",         rf()      );
-   *r++ = new command_parent( "serial",     serial_c());
-   *r++ = new command_parent( "sleep",      sleep_c() );
+std::list<command*> toplevel() {
+   std::list<command*> res;
+   res.push_back(new command_parent( "diagnostic", diag()    ));
+   res.push_back(new command_parent( "at",         at_c()    ));
+   res.push_back(new command_parent( "reset",      reset_c() ));
+   res.push_back(new command_parent( "io",         io()      ));
+   res.push_back(new command_parent( "encryption", enc()     ));
+   res.push_back(new command_parent( "net",        net()     ));
+   res.push_back(new command_parent( "rf",         rf()      ));
+   res.push_back(new command_parent( "serial",     serial_c()));
+   res.push_back(new command_parent( "sleep",      sleep_c() ));
 
-   *r++ = new command_child( "discover-nodes", new at_cmd_discover() );
-   *r++ = new command_child( "resolve-ni",       fake_cmd );
-   *r++ = new command_child( "comission",        fake_cmd );
-   *r++ = new command_child( "apply", new at_cmd_simple("AC") );
-   *r++ = new command_child( "write", new at_cmd_simple("WR") );
-   *r++ = new command_child( "defaults", new at_cmd_simple("RE") );
-   *r++ = new command_child( "device-type",      fake_cmd );
-   *r++ = new command_child( "debug",  new at_cmd_debug() );
-   *r++ = new command_child( "remote", new at_cmd_remote() );
+   res.push_back(new command_child( "discover-nodes", new at_cmd_discover() ));
+   res.push_back(new command_child( "resolve-ni",       fake_cmd ));
+   res.push_back(new command_child( "comission",        fake_cmd ));
+   res.push_back(new command_child( "apply", new at_cmd_simple("AC") ));
+   res.push_back(new command_child( "write", new at_cmd_simple("WR") ));
+   res.push_back(new command_child( "defaults", new at_cmd_simple("RE") ));
+   res.push_back(new command_child( "device-type",      fake_cmd ));
+   res.push_back(new command_child( "debug",  new at_cmd_debug() ));
+   res.push_back(new command_child( "remote", new at_cmd_remote() ));
 
-   *r++ = 0;
-
-   return result;
+   return res;
 };
 
 command * setup_commands() {

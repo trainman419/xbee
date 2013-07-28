@@ -27,4 +27,4 @@
 
 #include "xbee_at_cmd.h"
 
-command ** net();
+std::list<command*> net();

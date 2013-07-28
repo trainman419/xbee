@@ -528,34 +528,30 @@ xbee_addr parse_addr(std::string addr) {
    return res;
 }
 
-command ** diag() {
-   command ** r = new command*[4];
-   r[0] = new command_child( "fw-version", new at_cmd_fw());
-   r[1] = new command_child( "hw-version",       new at_cmd_ro_hex("HV", 
-         "Hardware version", 2) );
-   r[2] = new command_child( "associate-status", new at_cmd_status() );
-   r[3] = 0;
-   return r;
+std::list<command*> diag() {
+   std::list<command*> res;
+   res.push_back(new command_child( "fw-version", new at_cmd_fw()));
+   res.push_back(new command_child( "hw-version",       new at_cmd_ro_hex("HV", 
+      "Hardware version", 2) ));
+   res.push_back(new command_child( "associate-status", new at_cmd_status() ));
+   return res;
 }
 
-command ** at_c() {
-   command ** r = new command*[4];
-   r[0] = new command_child( "mode-timeout", new at_cmd_scaled("CT", 2, 2, 
-            0x028F, 100.0, "ms", "Command mode timeout") );
-   r[1] = new command_child( "guard-time", new at_cmd_scaled("GT", 2, 1, 0x0CE4,
-            1, "ms", "Guard time"));
-   r[2] = new command_child( "command-character", fake_cmd );
-   r[3] = 0;
-   return r;
+std::list<command*> at_c() {
+   std::list<command*> res;
+   res.push_back(new command_child( "mode-timeout", new at_cmd_scaled("CT", 2,
+               2, 0x028F, 100.0, "ms", "Command mode timeout") ));
+   res.push_back(new command_child( "guard-time", new at_cmd_scaled("GT", 2, 1,
+               0x0CE4, 1, "ms", "Guard time")));
+   res.push_back(new command_child( "command-character", fake_cmd ));
+   return res;
 }
 
-command ** reset_c() {
-   command ** r = new command*[4];
-
+std::list<command*> reset_c() {
+   std::list<command*> res;
    // TODO: pass the proper parameters to network reset
-   r[0] = new command_child( "network", new at_cmd_simple("NR"));
-   r[1] = new command_child( "soft", new at_cmd_simple("FR"));
-   r[2] = new command_child( "hard", new cmd_hardreset() );
-   r[3] = 0;
-   return r;
+   res.push_back(new command_child( "network", new at_cmd_simple("NR")));
+   res.push_back(new command_child( "soft", new at_cmd_simple("FR")));
+   res.push_back(new command_child( "hard", new cmd_hardreset() ));
+   return res;
 }

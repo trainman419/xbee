@@ -1,5 +1,5 @@
 
-#include "xbee_at_cmd.h"
+#include "xbee_at_net.h"
 
 #include <boost/foreach.hpp>
 
@@ -76,72 +76,64 @@ class at_cmd_ni : public at_cmd_rw {
       }
 };
 
-command ** net_short() {
-   command ** result = new command*[3];
-   command ** r = result;
-   *r++ = new command_child( "address", new at_cmd_ro_hex("MY", "16-bit network address", 2) );
-   *r++ = new command_child( "parent",  new at_cmd_ro_hex("MP", "16-bit parent address", 2) );
-   *r++ = 0;
-   return result;
+std::list<command*> net_short() {
+   std::list<command*> res;
+   res.push_back(new command_child( "address", new at_cmd_ro_hex("MY",
+               "16-bit network address", 2) ));
+   res.push_back(new command_child( "parent",  new at_cmd_ro_hex("MP",
+               "16-bit parent address", 2) ));
+   return res;
 };
 
-command ** net_max() {
-   command ** result = new command*[3];
-   command ** r = result;
-   *r++ = new command_child( "unicast", new at_cmd_scaled("NH", 1, 0, 0xFF,
-            1, "hops", "Maximum unicast distance"));
-   *r++ = new command_child( "broadcast", new at_cmd_scaled("BH", 1, 0, 0x1E,
-            1, "hops", "Maximum broadcast distance"));
-   *r++ = 0;
-   return result;
+std::list<command*> net_max() {
+   std::list<command*> res;
+   res.push_back(new command_child( "unicast", new at_cmd_scaled("NH", 1, 0,
+               0xFF, 1, "hops", "Maximum unicast distance")));
+   res.push_back(new command_child( "broadcast", new at_cmd_scaled("BH", 1, 0,
+               0x1E, 1, "hops", "Maximum broadcast distance")));
+   return res;
 };
 
-command ** net_pan() {
-   command ** result = new command*[4];
-   command ** r = result;
-   *r++ = new command_child( "operating", new at_cmd_ro_hex("OP", "64-bit Operating PAN ID", 8) );
-   *r++ = new command_child( "long",      fake_cmd );
-   *r++ = new command_child( "short", new at_cmd_ro_hex("OI", "16-bit Operating PAN ID", 2) );
-   *r++ = 0;
-   return result;
+std::list<command*> net_pan() {
+   std::list<command*> res;
+   res.push_back(new command_child( "operating", new at_cmd_ro_hex("OP",
+               "64-bit Operating PAN ID", 8) ));
+   res.push_back(new command_child( "long",      fake_cmd ));
+   res.push_back(new command_child( "short", new at_cmd_ro_hex("OI",
+               "16-bit Operating PAN ID", 2) ));
+   return res;
 };
 
-command ** net_node() {
-   command ** result = new command*[3];
-   command ** r = result;
-   *r++ = new command_child( "timeout", new at_cmd_scaled("NT", 1, 0x20, 0xFF,
-            100, "ms", "Network discovery timeout"));
-   *r++ = new command_child( "options", new at_cmd_flags("NO", 2,
-            "device-type", "local-response"));
-   *r++ = 0;
-   return result;
+std::list<command*> net_node() {
+   std::list<command*> res;
+   res.push_back(new command_child( "timeout", new at_cmd_scaled("NT", 1, 0x20,
+               0xFF, 100, "ms", "Network discovery timeout")));
+   res.push_back(new command_child( "options", new at_cmd_flags("NO", 2,
+               "device-type", "local-response")));
+   return res;
 };
 
-command ** net_join() {
-   command ** result = new command*[3];
-   command ** r = result;
-   *r++ = new command_child( "notification", new at_cmd_enum("JN", 2,
-            0, "off", 1, "on"));
-   *r++ = new command_child( "time", new at_cmd_scaled("NJ", 1, 0, 0xFF, 1,
-            "sec", "Node join time"));
-   *r++ = 0;
-   return result;
+std::list<command*> net_join() {
+   std::list<command*> res;
+   res.push_back(new command_child( "notification", new at_cmd_enum("JN", 2,
+               0, "off", 1, "on")));
+   res.push_back(new command_child( "time", new at_cmd_scaled("NJ", 1, 0, 0xFF,
+               1, "sec", "Node join time")));
+   return res;
 };
 
-command ** net() {
-   command ** result = new command*[11];
-   command ** r = result;
-   *r++ = new command_parent( "short",          net_short() );
-   *r++ = new command_parent( "max-hops",       net_max()   );
-   *r++ = new command_parent( "PAN-ID",         net_pan()   );
-   *r++ = new command_parent( "node-discovery", net_node()  );
-   *r++ = new command_parent( "join",           net_join()  );
+std::list<command*> net() {
+   std::list<command*> res;
+   res.push_back(new command_parent( "short",          net_short() ));
+   res.push_back(new command_parent( "max-hops",       net_max()   ));
+   res.push_back(new command_parent( "PAN-ID",         net_pan()   ));
+   res.push_back(new command_parent( "node-discovery", net_node()  ));
+   res.push_back(new command_parent( "join",           net_join()  ));
 
-   *r++ = new command_child( "node-id", new at_cmd_ni() );
-   *r++ = new command_child( "max-payload", fake_cmd );
-   *r++ = new command_child( "destination", fake_cmd );
-   *r++ = new command_child( "children",    fake_cmd );
-   *r++ = new command_child( "serial", new at_cmd_serial() );
-   *r++ = 0;
-   return result;
+   res.push_back(new command_child( "node-id", new at_cmd_ni() ));
+   res.push_back(new command_child( "max-payload", fake_cmd ));
+   res.push_back(new command_child( "destination", fake_cmd ));
+   res.push_back(new command_child( "children",    fake_cmd ));
+   res.push_back(new command_child( "serial", new at_cmd_serial() ));
+   return res;
 };

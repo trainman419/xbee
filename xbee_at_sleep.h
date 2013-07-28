@@ -12,4 +12,4 @@
 
 #include "xbee_at_cmd.h"
 
-command ** sleep_c();
+std::list<command*> sleep_c();

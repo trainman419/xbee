@@ -10,4 +10,6 @@
 //  serial DIO6 config (ATD6)
 //
 
-command ** serial_c();
+#include "xbee_at_cmd.h"
+
+std::list<command*> serial_c();

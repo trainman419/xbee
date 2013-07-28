@@ -15,4 +15,4 @@
 
 #include "xbee_at_cmd.h"
 
-command ** rf();
+std::list<command*> rf();

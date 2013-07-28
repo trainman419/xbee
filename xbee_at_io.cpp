@@ -1,5 +1,5 @@
 
-#include "xbee_at_cmd.h"
+#include "xbee_at_io.h"
 
 #include <boost/foreach.hpp>
 
@@ -30,29 +30,26 @@ class at_cmd_sample : public at_cmd_ro {
       }
 };
 
-command ** io_voltage() {
-   command ** result = new command*[3];
-   command ** r = result;
-   *r++ = new command_child( "supply",     fake_cmd);
-   *r++ = new command_child( "monitoring", fake_cmd);
-   *r++ = 0;
-   return result;
+std::list<command*> io_voltage() {
+   std::list<command*> res;
+   res.push_back(new command_child( "supply",     fake_cmd));
+   res.push_back(new command_child( "monitoring", fake_cmd));
+   return res;
 };
 
-command ** io() {
-   command ** result = new command*[24];
-   command ** r = result;
-   *r++ = new command_parent( "voltage",   io_voltage());
+std::list<command*> io() {
+   std::list<command*> res;
+   res.push_back(new command_parent( "voltage",   io_voltage()));
 
-   *r++ = new command_child( "pull-up", new at_cmd_flags("PR",14,
+   res.push_back(new command_child( "pull-up", new at_cmd_flags("PR",14,
             "D4", "D3", "D2", "D1", "D0", "D6", "D8", "DIN", "D5",
-            "D9", "D12", "D10", "D11", "D7"));
-   *r++ = new command_child( "PWM0", new at_cmd_enum("P0", 5,
+            "D9", "D12", "D10", "D11", "D7")));
+   res.push_back(new command_child( "PWM0", new at_cmd_enum("P0", 5,
             0, "disabled",
             1, "RSSI",
             3, "digital-in",
             4, "off",
-            5, "on"));
+            5, "on")));
 
    // DIO
    at_cmd * dio0 = new at_cmd_enum("D0", 6,
@@ -82,70 +79,69 @@ command ** io() {
          5, "on");
 
    // Digital commands
-   *r++ = new command_child( "D0",    dio0);
-   *r++ = new command_child( "D1",    dio1);
-   *r++ = new command_child( "D2",    dio2);
-   *r++ = new command_child( "D3",    dio3);
+   res.push_back(new command_child( "D0",    dio0));
+   res.push_back(new command_child( "D1",    dio1));
+   res.push_back(new command_child( "D2",    dio2));
+   res.push_back(new command_child( "D3",    dio3));
 
-   *r++ = new command_child( "D4",    new at_cmd_enum("D4", 4,
+   res.push_back(new command_child( "D4",    new at_cmd_enum("D4", 4,
             0, "disabled",
             3, "digital-in",
             4, "off",
-            5, "on"));
-   *r++ = new command_child( "D5",    new at_cmd_enum("D5", 5,
+            5, "on")));
+   res.push_back(new command_child( "D5",    new at_cmd_enum("D5", 5,
             0, "disabled",
             1, "associate",
             3, "digital-in",
             4, "off",
-            5, "on"));
+            5, "on")));
 
    // DIO6-7 are serial
 
    /* D8 is not yet supported 
-   *r++ = new command_child( "D8",    new at_cmd_enum("D8", 4,
+   res.push_back(new command_child( "D8",    new at_cmd_enum("D8", 4,
             0, "disabled",
             3, "digital-in",
             4, "off",
-            5, "on"));
+            5, "on")));
             */
 
    // DIO9-10 are serial
-   *r++ = new command_child( "D11",    new at_cmd_enum("P1", 4,
+   res.push_back(new command_child( "D11",    new at_cmd_enum("P1", 4,
             0, "disabled",
             3, "digital-in",
             4, "off",
-            5, "on"));
-   *r++ = new command_child( "D12",    new at_cmd_enum("P2", 4,
+            5, "on")));
+   res.push_back(new command_child( "D12",    new at_cmd_enum("P2", 4,
             0, "disabled",
             3, "digital-in",
             4, "off",
-            5, "on"));
+            5, "on")));
    /*
-   *r++ = new command_child( "D13",    new at_cmd_enum("P3", 4,
+   res.push_back(new command_child( "D13",    new at_cmd_enum("P3", 4,
             0, "disabled",
             3, "digital-in",
             4, "off",
-            5, "on"));
+            5, "on")));
             */
 
    // A2D
-   *r++ = new command_child( "AD0",      dio0);
-   *r++ = new command_child( "AD1",      dio1);
-   *r++ = new command_child( "AD2",      dio2);
-   *r++ = new command_child( "AD3",      dio3);
+   res.push_back(new command_child( "AD0",      dio0));
+   res.push_back(new command_child( "AD1",      dio1));
+   res.push_back(new command_child( "AD2",      dio2));
+   res.push_back(new command_child( "AD3",      dio3));
 
    // other configurataion options
-   *r++ = new command_child( "sample-rate", new at_cmd_scaled("IR", 2, 0x32, 
-            0xFFFF, 1.0, "ms", "Sample rate")); // TODO: set 0 to mean off
-   *r++ = new command_child( "change-detection", new at_cmd_flags("IC", 12,
+   res.push_back(new command_child( "sample-rate", new at_cmd_scaled("IR", 2, 0x32, 
+            0xFFFF, 1.0, "ms", "Sample rate"))); // TODO: set 0 to mean off
+   res.push_back(new command_child( "change-detection", new at_cmd_flags("IC", 12,
             "D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8",
-            "D9", "D10", "D11"));
-   *r++ = new command_child( "led-blink-time", new at_cmd_scaled("LT", 1, 0x0A,
-            0xFF, 10.0, "ms", "LED blink time")); // TODO: set 0 to mean default
-   *r++ = new command_child( "RSSI-PWM", new at_cmd_scaled("RP", 1, 0, 0xFF,
-            100.0, "ms", "RSSI PWM")); // TODO: set 0xFF to mean always-on
-   *r++ = new command_child( "temperature",      fake_cmd);
-   *r++ = new command_child( "force-sample", new at_cmd_sample() );
-   *r++ = 0;
-   return result;
+            "D9", "D10", "D11")));
+   res.push_back(new command_child( "led-blink-time", new at_cmd_scaled("LT", 1, 0x0A,
+            0xFF, 10.0, "ms", "LED blink time"))); // TODO: set 0 to mean default
+   res.push_back(new command_child( "RSSI-PWM", new at_cmd_scaled("RP", 1, 0, 0xFF,
+            100.0, "ms", "RSSI PWM"))); // TODO: set 0xFF to mean always-on
+   res.push_back(new command_child( "temperature",      fake_cmd));
+   res.push_back(new command_child( "force-sample", new at_cmd_sample() ));
+   return res;
 }

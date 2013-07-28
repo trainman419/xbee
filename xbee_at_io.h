@@ -27,4 +27,6 @@
 //  io sensor-sample (AT1S)
 //
 
-command ** io();
+#include "xbee_at_cmd.h"
+
+std::list<command*> io();

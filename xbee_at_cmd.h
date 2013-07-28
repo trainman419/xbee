@@ -48,7 +48,7 @@ class command_parent : public command {
       prefix_map<command> subcommands;
 
    public:
-      command_parent(std::string n, command ** sub);
+      command_parent(std::string n, std::list<command*> cmds);
       virtual ~command_parent() {}
 
       virtual command * get_subcommand(std::string prefix);
@@ -78,8 +78,8 @@ class command_child : public command {
 extern at_cmd * fake_cmd;
 
 command * setup_commands();
-command ** diag();
-command ** at_c();
-command ** reset_c();
+std::list<command*> diag();
+std::list<command*> at_c();
+std::list<command*> reset_c();
 
 #endif

@@ -8,4 +8,4 @@
 
 #include "xbee_at_cmd.h"
 
-command ** enc();
+std::list<command*> enc();
