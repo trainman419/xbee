@@ -98,7 +98,8 @@ std::list<command*> net_pan() {
    std::list<command*> res;
    res.push_back(new command_child( "operating", new at_cmd_ro_hex("OP",
                "64-bit Operating PAN ID", 8) ));
-   res.push_back(new command_child( "long",      fake_cmd ));
+   res.push_back(new command_child( "long", new at_cmd_hex("ID", 8, 
+               "64-bit PAN ID")));
    res.push_back(new command_child( "short", new at_cmd_ro_hex("OI",
                "16-bit Operating PAN ID", 2) ));
    return res;
@@ -131,8 +132,10 @@ std::list<command*> net() {
    res.push_back(new command_parent( "join",           net_join()  ));
 
    res.push_back(new command_child( "node-id", new at_cmd_ni() ));
-   res.push_back(new command_child( "max-payload", fake_cmd ));
-   res.push_back(new command_child( "destination", fake_cmd ));
+   res.push_back(new command_child( "max-payload", new at_cmd_scaled_ro("NP",
+               2, 1, "bytes", "Maximum payload")));
+   res.push_back(new command_child( "destination", new at_cmd_hex("DE", 1, 
+               "Destination Endpoint")));
    res.push_back(new command_child( "children", new at_cmd_scaled_ro("NC", 1,
                1, "", "Remaining children")));
    res.push_back(new command_child( "serial", new at_cmd_serial() ));

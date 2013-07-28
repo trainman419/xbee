@@ -113,9 +113,9 @@ int at_cmd_hex::read_frame(xbsh_state * state, api_frame * ret) {
 
 std::vector<uint8_t> at_cmd_hex::write_frame(xbsh_state * state, 
       std::string arg) {
-   uint32_t hex = 0;
+   uint64_t hex = 0;
    std::vector<uint8_t> ret;
-   if( sscanf(arg.c_str(), "%X", &hex) == 1 ) {
+   if( sscanf(arg.c_str(), "%lX", &hex) == 1 ) {
       for( int i=len-1; i>=0; --i ) {
          ret.push_back(hex >> (i*8));
       }
