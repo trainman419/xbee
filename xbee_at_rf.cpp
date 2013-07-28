@@ -13,7 +13,8 @@ std::list<command*> rf_scan() {
 
 std::list<command*> rf_power() {
    std::list<command*> res;
-   res.push_back(new command_child( "level", fake_cmd ));
+   res.push_back(new command_child( "level", new at_cmd_scaled("PL", 1, 0, 4, 1,
+               "", "Power level")));
    res.push_back(new command_child( "mode", new at_cmd_enum("PM", 2,
             0, "normal", 1, "boost")));
    res.push_back(new command_child( "peak", new at_cmd_scaled_ro("PP", 1, 1.0,
