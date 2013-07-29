@@ -75,8 +75,6 @@ class command_child : public command {
       virtual std::list<std::string> get_completions(std::string prefix);
 };
 
-extern at_cmd * fake_cmd;
-
 command * setup_commands();
 std::list<command*> diag();
 std::list<command*> at_c();

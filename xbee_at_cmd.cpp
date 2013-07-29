@@ -35,8 +35,6 @@ class fake_at_cmd : public at_cmd {
       }
 };
 
-at_cmd * fake_cmd = new fake_at_cmd();
-
 // types of child commands:
 //  read-only
 //  read/write
@@ -206,6 +204,58 @@ class at_cmd_remote : public at_cmd_rw {
       }
 };
 
+class at_cmd_resolve : public at_cmd {
+   public:
+      at_cmd_resolve() : at_cmd("DN") {}
+      virtual ~at_cmd_resolve() {}
+
+   protected:
+      virtual int run(xbsh_state * state, std::string arg) {
+         if( arg.length() < 1 ) {
+            printf("Error: please supply a node identifier\n");
+            return 1;
+         }
+
+         if( arg.length() > 20 ) {
+            printf("Error: node identifier too long\n");
+            return 1;
+         }
+
+         std::vector<uint8_t> data(arg.begin(), arg.end());
+         state->send_AT(cmd, data);
+         api_frame * ret = state->read_AT();
+         if( ret->ok() ) {
+            std::vector<uint8_t> ret_data = ret->get_data();
+            if( ret_data.size() == 10 ) {
+               xbee_net net;
+               net.c_net[1] = ret_data[0];
+               net.c_net[0] = ret_data[1];
+
+               xbee_addr addr;
+               addr.c_addr[7] = ret_data[2];
+               addr.c_addr[6] = ret_data[3];
+               addr.c_addr[5] = ret_data[4];
+               addr.c_addr[4] = ret_data[5];
+
+               addr.c_addr[3] = ret_data[6];
+               addr.c_addr[2] = ret_data[7];
+               addr.c_addr[1] = ret_data[8];
+               addr.c_addr[0] = ret_data[9];
+               printf("Network Address:  %02X%02X\n", net.c_net[1],
+                     net.c_net[0]);
+               printf("Extended Address: %s\n", print_addr(addr).c_str());
+            } else {
+               printf("Expected 10 bytes, got %zd\n", ret_data.size());
+               return 2;
+            }
+         } else {
+            printf("Error: %s\n", ret->get_error().c_str());
+            return 1;
+         }
+         return 0;
+      }
+};
+
 std::list<command*> toplevel() {
    std::list<command*> res;
    res.push_back(new command_parent( "diagnostic", diag()    ));
@@ -219,7 +269,7 @@ std::list<command*> toplevel() {
    res.push_back(new command_parent( "sleep",      sleep_c() ));
 
    res.push_back(new command_child( "discover-nodes", new at_cmd_discover() ));
-   res.push_back(new command_child( "resolve-ni",       fake_cmd ));
+   res.push_back(new command_child( "resolve-ni", new at_cmd_resolve()));
    res.push_back(new command_child( "comission", new at_cmd_option("CB",1,2)));
    res.push_back(new command_child( "apply", new at_cmd_simple("AC") ));
    res.push_back(new command_child( "write", new at_cmd_simple("WR") ));
