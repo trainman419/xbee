@@ -232,15 +232,15 @@ class at_cmd_resolve : public at_cmd {
                net.c_net[0] = ret_data[1];
 
                xbee_addr addr;
-               addr.c_addr[7] = ret_data[2];
-               addr.c_addr[6] = ret_data[3];
-               addr.c_addr[5] = ret_data[4];
-               addr.c_addr[4] = ret_data[5];
+               addr.c_addr[0] = ret_data[2];
+               addr.c_addr[1] = ret_data[3];
+               addr.c_addr[2] = ret_data[4];
+               addr.c_addr[3] = ret_data[5];
 
-               addr.c_addr[3] = ret_data[6];
-               addr.c_addr[2] = ret_data[7];
-               addr.c_addr[1] = ret_data[8];
-               addr.c_addr[0] = ret_data[9];
+               addr.c_addr[4] = ret_data[6];
+               addr.c_addr[5] = ret_data[7];
+               addr.c_addr[6] = ret_data[8];
+               addr.c_addr[7] = ret_data[9];
                printf("Network Address:  %02X%02X\n", net.c_net[1],
                      net.c_net[0]);
                printf("Extended Address: %s\n", print_addr(addr).c_str());
