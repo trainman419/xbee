@@ -288,6 +288,46 @@ void xbsh_state::operator()() {
                         }
                      }
                      break;
+                  case API_STATUS:
+                     if( len == 2 ) {
+                        printf("API Status: ");
+                        switch(data[4]) {
+                           case 0:
+                              printf("hardware reset\n");
+                              break;
+                           case 1:
+                              printf("watchdog reset\n");
+                              break;
+                           case 2:
+                              printf("joined network\n");
+                              break;
+                           case 3:
+                              printf("disassociated\n");
+                              break;
+                           case 6:
+                              printf("coordiantor started\n");
+                              break;
+                           case 7:
+                              printf("network key updated\n");
+                              break;
+                           case 0x0D:
+                              printf("voltage supply limit exceeded\n");
+                              break;
+                           case 0x11:
+                              printf("configuration changed while join in "
+                                     "progress");
+                              break;
+                           default:
+                              if( data[4] >= 0x80 ) {
+                                 printf("stack error\n");
+                              } else {
+                                 printf("Unknown API status 0x%02X\n", data[4]);
+                              }
+                        }
+                     } else {
+                        printf("Bad API frame. Length %d\n", len);
+                     }
+                     break;
                   default:
                      printf("Unknown response type %X\n", type);
                      break;
