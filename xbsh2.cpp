@@ -57,6 +57,20 @@
 //    the user; parse and format this data for display, without interrupting
 //    the user's prompt.
 //
+//
+// TODO: interleave asynchronous data and prompts
+// TODO: scripting mode
+// TODO: yaml/json output
+// TODO: more internal/cached state
+//    - maintain a cache of discovered nodes; run discovery in the background
+//    - poll various local node parameters on startup, for use later?
+//       - module type may be used by RF power level
+//       - limit commands based on API/non-API firmware
+//       - limit commands based on firmware type (coordinator/router/end)
+// TODO: use for a while and refactor command tree
+// TODO: add help strings for everything
+// TODO: refactor API to split shell from command execution
+// TODO: refactor error pathways; maybe use exceptions?
 
 xbsh_state::xbsh_state(std::string port, int baud ) :
    serial(port, baud, serial::Timeout(10, 100, 0)),
