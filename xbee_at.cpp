@@ -407,6 +407,41 @@ int at_cmd_simple::run(xbsh_state * state, std::string arg) {
    }
 }
 
+int at_cmd_option::run(xbsh_state * state, std::string arg) {
+   if( arg.length() <= 0 ) {
+      printf("Please supply an argument\n");
+      return 1;
+   }
+   uint8_t val;
+   if( sscanf(arg.c_str(), "%hhd", &val) == 1 ) {
+      if( val >= val_min && val <= val_max ) {
+         std::vector<uint8_t> data(1);
+         data[0] = val;
+         state->send_AT(cmd, data);
+         api_frame * ret = state->read_AT();
+         if( ret ) {
+            if( ret->ok() ) {
+               printf("Success\n");
+               return 0;
+            } else {
+               printf("Error: %s\n", ret->get_error().c_str());
+               return 3;
+            }
+            delete ret;
+         } else {
+            printf("Didn't get a response\n");
+            return 2;
+         }
+      } else {
+         printf("Error: value must be between %d and %d\n", val_min, val_max);
+         return 4;
+      }
+   } else {
+      printf("Error: failed to parse integer: %s\n", arg.c_str());
+      return 1;
+   }
+}
+
 at_cmd_scaled::at_cmd_scaled(std::string cmd, int bytes, int low, int high,
       double scale, std::string units, std::string flavor) : at_cmd_rw(cmd),
    bytes(bytes), low(low), high(high), scale(scale), units(units),
@@ -622,8 +657,7 @@ std::list<command*> at_c() {
 
 std::list<command*> reset_c() {
    std::list<command*> res;
-   // TODO: pass the proper parameters to network reset
-   res.push_back(new command_child( "network", new at_cmd_simple("NR")));
+   res.push_back(new command_child( "network", new at_cmd_option("NR", 0, 1)));
    res.push_back(new command_child( "soft", new at_cmd_simple("FR")));
    res.push_back(new command_child( "hard", new cmd_hardreset() ));
    return res;

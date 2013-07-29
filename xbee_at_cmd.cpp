@@ -220,7 +220,7 @@ std::list<command*> toplevel() {
 
    res.push_back(new command_child( "discover-nodes", new at_cmd_discover() ));
    res.push_back(new command_child( "resolve-ni",       fake_cmd ));
-   res.push_back(new command_child( "comission",        fake_cmd ));
+   res.push_back(new command_child( "comission", new at_cmd_option("CB",1,2)));
    res.push_back(new command_child( "apply", new at_cmd_simple("AC") ));
    res.push_back(new command_child( "write", new at_cmd_simple("WR") ));
    res.push_back(new command_child( "defaults", new at_cmd_simple("RE") ));

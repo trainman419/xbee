@@ -164,6 +164,19 @@ class at_cmd_simple : public at_cmd {
       virtual int run(xbsh_state * state, std::string arg);
 };
 
+class at_cmd_option : public at_cmd {
+   private:
+      uint8_t val_min;
+      uint8_t val_max;
+
+   public:
+      at_cmd_option(std::string cmd, uint8_t v_min, uint8_t v_max) :
+         at_cmd(cmd), val_min(v_min), val_max(v_max) {}
+      virtual ~at_cmd_option() {}
+
+      virtual int run(xbsh_state * state, std::string arg);
+};
+
 class at_cmd_hex : public at_cmd_rw {
    private:
       int len;
