@@ -24,6 +24,7 @@
 
 #include <boost/foreach.hpp>
 
+#define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <stdio.h>
 
