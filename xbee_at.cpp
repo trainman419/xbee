@@ -11,6 +11,7 @@
 
 #include <boost/foreach.hpp>
 
+#include <inttypes.h>
 #include <stdint.h>
 #include <stdarg.h>
 
@@ -115,7 +116,7 @@ std::vector<uint8_t> at_cmd_hex::write_frame(xbsh_state * state,
       std::string arg) {
    uint64_t hex = 0;
    std::vector<uint8_t> ret;
-   if( sscanf(arg.c_str(), "%lX", &hex) == 1 ) {
+   if( sscanf(arg.c_str(), "%" SCNx64, &hex) == 1 ) {
       for( int i=len-1; i>=0; --i ) {
          ret.push_back(hex >> (i*8));
       }

@@ -13,8 +13,6 @@
 //   * response printing
 //
 
-#define __STDC_LIMIT_MACROS
-
 #include "xbee_at.h"
 #include "xbee_at_cmd.h"
 #include "xbee_at_io.h"
@@ -26,7 +24,7 @@
 
 #include <boost/foreach.hpp>
 
-#include <limits.h>
+#include <inttypes.h>
 #include <stdio.h>
 
 class fake_at_cmd : public at_cmd {
@@ -162,19 +160,7 @@ class at_cmd_discover : public at_cmd_ro {
             manufacturer <<= 8;
             manufacturer |= data[i++];
             printf("Net Address:  %04X\n", net_addr);
-#ifdef UINT64_MAX
-#if UINT_MAX == UINT64_MAX
-            printf("Serial:       %016X\n", serial);
-#elif ULONG_MAX == UINT64_MAX
-            printf("Serial:       %016lX\n", serial);
-#elif ULLONG_MAX == UINT64_MAX
-            printf("Serial:       %016llX\n", serial);
-#else
-#error "uint64_t is not a long int or a long long int" UINT64_MAX
-#endif
-#else
-#error UINT64_MAX is not defined
-#endif
+            printf("Serial:       %016" PRIX64 "\n", serial);
             printf("Node ID:      %s\n", ni.c_str());
             printf("Parent:       %04X\n", parent);
             printf("Type:         %s\n", type.c_str());
